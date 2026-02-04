@@ -25,3 +25,11 @@ server_scripts {
 files {
     'web/dist/**/*'
 }
+
+escrow_ignore {
+    'config.lua',
+    'example.lua',
+    'DOCUMENTATION.md',
+    'fxmanifest.lua',
+    'web/dist/**',
+}
