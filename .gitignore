@@ -1,0 +1,16 @@
+# Claude Code
+.claude/
+
+# Dependencies
+web/node_modules/
+
+# Build cache
+web/tsconfig.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
