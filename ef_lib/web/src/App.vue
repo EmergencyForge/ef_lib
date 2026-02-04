@@ -3,18 +3,23 @@ import { onMounted } from 'vue'
 import Menu from '@/components/Menu.vue'
 import Notifications from '@/components/Notifications.vue'
 import ButtonHint from '@/components/ButtonHint.vue'
+import InputDialog from '@/components/InputDialog.vue'
+import AlertDialog from '@/components/AlertDialog.vue'
 import { useMenuStore } from '@/stores/menu'
 import { useNotificationStore } from '@/stores/notification'
 import { useSettingsStore } from '@/stores/settings'
 import { useHintStore } from '@/stores/hint'
+import { useDialogStore } from '@/stores/dialog'
 import { useNuiEvent, fetchNui, isInGame } from '@/composables/useNui'
 
 const menuStore = useMenuStore()
 const notificationStore = useNotificationStore()
 const settingsStore = useSettingsStore()
 const hintStore = useHintStore()
+const dialogStore = useDialogStore()
 
-// Handle NUI events from FiveM client
+// ─── Menu Events ───
+
 useNuiEvent('setVisible', (visible: boolean) => {
   menuStore.setVisible(visible)
 })
@@ -23,9 +28,15 @@ useNuiEvent('openMenu', (data: { title?: string; items: any[] }) => {
   menuStore.openMenu(data)
 })
 
+useNuiEvent('pushSubmenu', (data: { title?: string; items: any[] }) => {
+  menuStore.openSubmenu(data)
+})
+
 useNuiEvent('closeMenu', () => {
   menuStore.closeMenu()
 })
+
+// ─── Notification Events ───
 
 useNuiEvent('notification', (data: {
   type: 'success' | 'error' | 'warning' | 'info'
@@ -36,13 +47,16 @@ useNuiEvent('notification', (data: {
   notificationStore.addNotification(data.type, data.title, data.message, data.duration)
 })
 
+// ─── Config Events ───
+
 useNuiEvent('setConfig', (data: { accentColor?: string }) => {
   // Only apply server config if user hasn't customized
-  // User settings from localStorage take priority
   if (data.accentColor && settingsStore.accentColor === '#3b82f6') {
     settingsStore.setAccentColor(data.accentColor)
   }
 })
+
+// ─── Hint Events ───
 
 useNuiEvent('showHint', (data: { key: string; label: string; id?: string }) => {
   hintStore.showHint(data)
@@ -56,7 +70,35 @@ useNuiEvent('hideAllHints', () => {
   hintStore.hideAllHints()
 })
 
-// Settings submenu data - can be used in any menu
+// ─── Input Dialog Events ───
+
+useNuiEvent('openInputDialog', (data: { title: string; fields: any[] }) => {
+  dialogStore.openInputDialog(data)
+})
+
+useNuiEvent('closeInputDialog', () => {
+  dialogStore.closeInputDialog()
+})
+
+// ─── Alert Dialog Events ───
+
+useNuiEvent('openAlertDialog', (data: {
+  header: string
+  content?: string
+  centered?: boolean
+  cancel?: boolean
+  confirmLabel?: string
+  cancelLabel?: string
+}) => {
+  dialogStore.openAlertDialog(data)
+})
+
+useNuiEvent('closeAlertDialog', () => {
+  dialogStore.closeAlertDialog()
+})
+
+// ─── Settings Submenu ───
+
 const settingsSubmenu = {
   title: 'UI Settings',
   items: [
@@ -128,6 +170,8 @@ onMounted(() => {
     <Menu />
     <Notifications />
     <ButtonHint />
+    <InputDialog />
+    <AlertDialog />
   </div>
 </template>
 

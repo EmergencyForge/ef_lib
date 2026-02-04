@@ -13,6 +13,8 @@ export interface MenuItem {
   label: string
   description?: string
   icon?: string
+  iconColor?: string
+  readonly?: boolean
   disabled?: boolean
   data?: unknown
   // Item types: 'button' (default), 'checkbox', 'input', 'select'
@@ -170,16 +172,16 @@ export const useMenuStore = defineStore('menu', () => {
 
     // Create confirmation submenu
     const confirmSubmenu: MenuData = {
-      title: config.title || 'Confirm',
+      title: config.title || 'Bestätigen',
       items: [
         {
           id: '_confirm_yes',
-          label: config.confirmLabel || 'Yes',
+          label: config.confirmLabel || 'Ja',
           description: config.message || `Are you sure?`
         },
         {
           id: '_confirm_no',
-          label: config.cancelLabel || 'Cancel',
+          label: config.cancelLabel || 'Abbrechen',
           description: 'Go back'
         }
       ]
