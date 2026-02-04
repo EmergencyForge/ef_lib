@@ -67,6 +67,35 @@ RegisterCommand('fullmenu', function()
     })
 end, false)
 
+-- Example: Menu with Font Awesome 7 icons
+RegisterCommand('iconmenu', function()
+    exports.ef_lib:OpenMenu({
+        title = 'Font Awesome Icons',
+        items = {
+            -- Solid icons (fa-solid)
+            { id = 'user', label = 'User Profile', icon = 'fa-solid fa-user', description = 'View your profile' },
+            { id = 'settings', label = 'Settings', icon = 'fa-solid fa-gear', description = 'Configure options' },
+            { id = 'home', label = 'Home', icon = 'fa-solid fa-house', description = 'Return to home' },
+            { id = 'search', label = 'Search', icon = 'fa-solid fa-magnifying-glass', description = 'Search items' },
+
+            -- Regular icons (fa-regular)
+            { id = 'heart', label = 'Favorites', icon = 'fa-regular fa-heart', description = 'Your favorites' },
+            { id = 'star', label = 'Featured', icon = 'fa-regular fa-star', description = 'Featured items' },
+
+            -- Brand icons (fa-brands)
+            { id = 'discord', label = 'Join Discord', icon = 'fa-brands fa-discord', description = 'Join our community' },
+            { id = 'github', label = 'GitHub', icon = 'fa-brands fa-github', description = 'View source code' },
+
+            -- Mix with checkboxes and inputs
+            { id = 'notifications', label = 'Notifications', icon = 'fa-solid fa-bell', type = 'checkbox', checked = true },
+            { id = 'volume', label = 'Volume', icon = 'fa-solid fa-volume-high', type = 'input', placeholder = '0-100' },
+
+            -- Emoji still works too!
+            { id = 'emoji', label = 'Emoji Example', icon = '🎮', description = 'Emojis still work!' },
+        }
+    })
+end, false)
+
 -- Handle menu actions
 AddEventHandler('ef_lib:menuAction', function(data)
     -- data contains: id, type, label, checked, value, data
@@ -160,4 +189,18 @@ end, false)
     ef_lib:showHint                         -- Server can trigger to show hints
     ef_lib:hideHint                         -- Server can trigger to hide hints
     ef_lib:hideAllHints                     -- Server can trigger to hide all hints
+
+    Font Awesome Icons:
+
+    You can use Font Awesome 7 icons in menu items via the icon parameter.
+    The library uses the Font Awesome CDN for the latest icons.
+
+    Icon Format Examples:
+    - Solid icons:   'fa-solid fa-user', 'fa-solid fa-house', 'fa-solid fa-gear'
+    - Regular icons: 'fa-regular fa-heart', 'fa-regular fa-star'
+    - Brand icons:   'fa-brands fa-discord', 'fa-brands fa-github'
+
+    Browse icons at: https://fontawesome.com/icons
+
+    Note: Emojis (like '🎮', '⚙️') still work as icons too!
 ]]

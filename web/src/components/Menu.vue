@@ -410,7 +410,8 @@ onUnmounted(() => {
             }"
           >
             <div class="item-icon" v-if="item.icon">
-              {{ item.icon }}
+              <i v-if="item.icon.startsWith('fa-')" :class="item.icon"></i>
+              <span v-else>{{ item.icon }}</span>
             </div>
             <div class="item-content" :class="{ 'with-input': item.type === 'input' }">
               <span class="item-label">{{ item.label }}</span>
