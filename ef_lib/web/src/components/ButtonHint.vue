@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useHintStore } from '@/stores/hint'
 
 const hintStore = useHintStore()
@@ -9,12 +10,18 @@ function resolveIconClass(icon: string): string {
   if (icon.startsWith('fa-')) return 'fa-solid ' + icon
   return 'fa-solid fa-' + icon
 }
+
+const positionClass = computed(() => `pos-${hintStore.position}`)
+
+const isHorizontal = computed(() =>
+  hintStore.position === 'bottom-center' || hintStore.position === 'top-center'
+)
 </script>
 
 <template>
   <Transition name="hints-container">
-    <div v-if="hintStore.hints.length > 0" class="hints-container">
-      <TransitionGroup name="hint" tag="div" class="hints-list">
+    <div v-if="hintStore.hints.length > 0" class="hints-container" :class="positionClass">
+      <TransitionGroup name="hint" tag="div" class="hints-list" :class="{ horizontal: isHorizontal, vertical: !isHorizontal }">
         <div
           v-for="hint in hintStore.hints"
           :key="hint.id || hint.key"
@@ -36,19 +43,66 @@ function resolveIconClass(icon: string): string {
 <style scoped>
 .hints-container {
   position: fixed;
-  bottom: 40px;
-  left: 40px;
   z-index: 1000;
   pointer-events: none;
 }
 
-.hints-list {
+/* ─── Positions ─── */
+.pos-bottom-center {
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pos-bottom-left {
+  bottom: 40px;
+  left: 40px;
+}
+
+.pos-bottom-right {
+  bottom: 40px;
+  right: 40px;
+}
+
+.pos-top-left {
+  top: 40px;
+  left: 40px;
+}
+
+.pos-top-center {
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pos-top-right {
+  top: 40px;
+  right: 40px;
+}
+
+/* ─── Layout ─── */
+.hints-list.horizontal {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.hints-list.vertical {
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: flex-start;
 }
 
+.pos-bottom-right .hints-list.vertical,
+.pos-top-right .hints-list.vertical {
+  align-items: flex-end;
+}
+
+/* ─── Items ─── */
 .hint-item {
   display: flex;
   align-items: center;
@@ -91,19 +145,41 @@ function resolveIconClass(icon: string): string {
   white-space: nowrap;
 }
 
-/* Container transition */
+/* ─── Container Transitions ─── */
 .hints-container-enter-active,
 .hints-container-leave-active {
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.hints-container-enter-from,
-.hints-container-leave-to {
+.pos-bottom-center.hints-container-enter-from,
+.pos-bottom-center.hints-container-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(16px);
+}
+
+.pos-top-center.hints-container-enter-from,
+.pos-top-center.hints-container-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-16px);
+}
+
+.pos-bottom-left.hints-container-enter-from,
+.pos-bottom-left.hints-container-leave-to,
+.pos-top-left.hints-container-enter-from,
+.pos-top-left.hints-container-leave-to {
   opacity: 0;
   transform: translateX(-16px);
 }
 
-/* Individual hint transitions */
+.pos-bottom-right.hints-container-enter-from,
+.pos-bottom-right.hints-container-leave-to,
+.pos-top-right.hints-container-enter-from,
+.pos-top-right.hints-container-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
+}
+
+/* ─── Item Transitions ─── */
 .hint-enter-active,
 .hint-leave-active {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -111,12 +187,12 @@ function resolveIconClass(icon: string): string {
 
 .hint-enter-from {
   opacity: 0;
-  transform: translateX(-12px) scale(0.95);
+  transform: scale(0.95);
 }
 
 .hint-leave-to {
   opacity: 0;
-  transform: translateX(-8px) scale(0.95);
+  transform: scale(0.95);
 }
 
 .hint-move {

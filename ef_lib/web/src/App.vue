@@ -58,7 +58,11 @@ useNuiEvent('setConfig', (data: { accentColor?: string }) => {
 
 // ─── Hint Events ───
 
-useNuiEvent('showHint', (data: { key: string; label: string; id?: string }) => {
+useNuiEvent('setHintPosition', (data: { position: string }) => {
+  hintStore.setPosition(data.position as any)
+})
+
+useNuiEvent('showHint', (data: { key: string; label: string; id?: string; icon?: string }) => {
   hintStore.showHint(data)
 })
 

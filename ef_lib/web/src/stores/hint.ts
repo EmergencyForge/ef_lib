@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+export type HintPosition = 'bottom-center' | 'bottom-left' | 'bottom-right' | 'top-left' | 'top-center' | 'top-right'
+
 export interface HintData {
-  key: string           // The key to press (e.g., "E", "F", "G")
+  key: string           // The key to press (e.g., "E", "F", "G") - empty string for no key
   label: string         // The action label (e.g., "Open Shop", "Talk")
   id?: string           // Optional ID for multiple hints
   icon?: string         // Optional FontAwesome icon (e.g., "fa-solid fa-tv")
@@ -10,9 +12,13 @@ export interface HintData {
 
 export const useHintStore = defineStore('hint', () => {
   const hints = ref<HintData[]>([])
+  const position = ref<HintPosition>('bottom-center')
+
+  function setPosition(pos: HintPosition) {
+    position.value = pos || 'bottom-center'
+  }
 
   function showHint(data: HintData) {
-    // Remove existing hint with same ID if it exists
     if (data.id) {
       hints.value = hints.value.filter(h => h.id !== data.id)
     }
@@ -23,17 +29,19 @@ export const useHintStore = defineStore('hint', () => {
     if (id) {
       hints.value = hints.value.filter(h => h.id !== id)
     } else {
-      // Hide all hints
       hints.value = []
     }
   }
 
   function hideAllHints() {
     hints.value = []
+    position.value = 'bottom-center'
   }
 
   return {
     hints,
+    position,
+    setPosition,
     showHint,
     hideHint,
     hideAllHints

@@ -378,7 +378,17 @@ end
 -----------------------
 
 -- Show a button hint (key, label, optional id for multiple hints)
-local function ShowHint(key, label, id, icon)
+local function SetHintPosition(position)
+    SendNUIMessage({
+        action = 'setHintPosition',
+        data = { position = position or 'bottom-center' }
+    })
+end
+
+local function ShowHint(key, label, id, icon, position)
+    if position then
+        SetHintPosition(position)
+    end
     SendNUIMessage({
         action = 'showHint',
         data = {
@@ -398,7 +408,7 @@ local function HideHint(id)
     })
 end
 
--- Hide all hints
+-- Hide all hints (also resets position to default)
 local function HideAllHints()
     SendNUIMessage({
         action = 'hideAllHints'
@@ -806,6 +816,7 @@ exports('SetAccentColor', SetAccentColor)
 
 -- Button Hints
 exports('ShowHint', ShowHint)
+exports('SetHintPosition', SetHintPosition)
 exports('HideHint', HideHint)
 exports('HideAllHints', HideAllHints)
 
@@ -835,8 +846,8 @@ RegisterNetEvent('ef_lib:closeMenu', CloseMenu)
 RegisterNetEvent('ef_lib:notify', function(type, title, message, duration)
     SendNotification(type, title, message, duration)
 end)
-RegisterNetEvent('ef_lib:showHint', function(key, label, id, icon)
-    ShowHint(key, label, id, icon)
+RegisterNetEvent('ef_lib:showHint', function(key, label, id, icon, position)
+    ShowHint(key, label, id, icon, position)
 end)
 RegisterNetEvent('ef_lib:hideHint', function(id)
     HideHint(id)
