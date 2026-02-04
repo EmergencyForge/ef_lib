@@ -56,6 +56,7 @@ function handleKeyDown(event: KeyboardEvent) {
       activateCurrentItem()
       break
     case 'Escape':
+    case 'Backspace':
       event.preventDefault()
       closeMenu()
       break
@@ -242,6 +243,22 @@ function closeMenu() {
   fetchNui('closeMenu')
 }
 
+function onItemClick(item: MenuItem) {
+  if (item.disabled || item.readonly) return
+
+  if (item.type === 'checkbox') {
+    toggleCheckbox(item)
+  } else if (item.type === 'select') {
+    cycleSelect(item)
+  } else if (item.type === 'input') {
+    // Focus the input field
+    const input = document.querySelector(`input[data-id="${item.id}"]`) as HTMLInputElement
+    input?.focus()
+  } else {
+    activateCurrentItem()
+  }
+}
+
 // Handle navigation messages from game client (allows walking while menu open)
 function handleNuiMessage(event: MessageEvent) {
   const { action, data } = event.data
@@ -303,6 +320,8 @@ onUnmounted(() => {
               disabled: item.disabled,
               readonly: item.readonly
             }"
+            @mouseenter="menuStore.selectedIndex = index"
+            @click="onItemClick(item)"
           >
             <div class="item-icon" v-if="item.icon" :style="item.iconColor ? { color: item.iconColor } : {}">
               <i :class="resolveIconClass(item.icon)"></i>
@@ -442,6 +461,7 @@ onUnmounted(() => {
   padding: 14px 20px;
   transition: all 0.15s ease;
   border-left: 3px solid transparent;
+  cursor: pointer;
 }
 
 .menu-item.selected {

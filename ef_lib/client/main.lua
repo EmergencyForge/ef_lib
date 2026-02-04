@@ -13,6 +13,8 @@ local isMenuOpen = false
 local contextMenuOpen = false
 local activeContextCallbacks = {}
 local contextNavigated = false
+local inputDialogPromise = nil
+local alertDialogPromise = nil
 
 -----------------------
 -- Callback System
@@ -261,6 +263,37 @@ local function RequestModel(model, timeout)
     return true
 end
 
+local NativeRequestAnimDict = RequestAnimDict -- Cache native
+
+--- Request and load an animation dictionary asynchronously, with timeout
+--- @param dict string Animation dictionary name
+--- @param timeout? number Timeout in ms (default: 10000)
+--- @return boolean success Whether the anim dict was loaded successfully
+local function RequestAnimDict(dict, timeout)
+    if type(dict) ~= 'string' then
+        print('^1[EF_LIB] RequestAnimDict: dict must be a string^0')
+        return false
+    end
+
+    if HasAnimDictLoaded(dict) then
+        return true
+    end
+
+    NativeRequestAnimDict(dict)
+    timeout = timeout or 10000
+    local startTime = GetGameTimer()
+
+    while not HasAnimDictLoaded(dict) do
+        if GetGameTimer() - startTime > timeout then
+            print(('^1[EF_LIB] RequestAnimDict: Timeout loading dict %s^0'):format(dict))
+            return false
+        end
+        Wait(10)
+    end
+
+    return true
+end
+
 -----------------------
 -- Core Menu Functions
 -----------------------
@@ -270,7 +303,7 @@ local function OpenMenu(menuData)
     if isMenuOpen then return end
 
     isMenuOpen = true
-    SetNuiFocus(false, false) -- No cursor, keyboard goes to game
+    SetNuiFocus(true, true)
     SendNUIMessage({
         action = 'openMenu',
         data = menuData or {}
@@ -285,7 +318,12 @@ local function CloseMenu()
     contextMenuOpen = false
     contextNavigated = false
     activeContextCallbacks = {}
-    SetNuiFocus(false, false)
+
+    -- Only remove NUI focus if no dialog is currently open
+    if not inputDialogPromise and not alertDialogPromise then
+        SetNuiFocus(false, false)
+    end
+
     SendNUIMessage({
         action = 'closeMenu'
     })
@@ -419,10 +457,7 @@ RegisterNUICallback('closeMenu', function(data, cb)
 end)
 
 RegisterNUICallback('setKeyboardFocus', function(data, cb)
-    local enabled = data.enabled
-    if isMenuOpen then
-        SetNuiFocus(enabled, false)
-    end
+    -- Menu now always has full NUI focus, this is a no-op
     cb('ok')
 end)
 
@@ -540,7 +575,7 @@ local function ShowContext(id)
     else
         -- Open fresh menu
         isMenuOpen = true
-        SetNuiFocus(false, false)
+        SetNuiFocus(true, true)
         SendNUIMessage({
             action = 'openMenu',
             data = menuData
@@ -641,8 +676,6 @@ end
 -- Input Dialog System
 -----------------------
 
-local inputDialogPromise = nil
-
 --- Open a multi-field input dialog and wait for user input
 --- @param title string Dialog title
 --- @param fields table Array of field definitions: { type, label, description?, placeholder?, required?, default?, min?, max?, step?, checked?, options? }
@@ -680,8 +713,12 @@ local function InputDialog(title, fields)
     local result = Citizen.Await(inputDialogPromise)
     inputDialogPromise = nil
 
-    -- Restore focus
-    SetNuiFocus(isMenuOpen and false or false, false)
+    -- Restore focus: if menu is open keep cursor, otherwise release
+    if isMenuOpen then
+        SetNuiFocus(true, true)
+    else
+        SetNuiFocus(false, false)
+    end
 
     return result
 end
@@ -691,15 +728,12 @@ RegisterNUICallback('inputDialogResult', function(data, cb)
     if inputDialogPromise then
         inputDialogPromise:resolve(data.values) -- values = array or nil
     end
-    SetNuiFocus(false, false)
     cb('ok')
 end)
 
 -----------------------
 -- Alert Dialog System
 -----------------------
-
-local alertDialogPromise = nil
 
 --- Open a confirmation/alert dialog and wait for user response
 --- @param data table Dialog config: { header, content?, centered?, cancel?, confirmLabel?, cancelLabel? }
@@ -729,8 +763,12 @@ local function AlertDialog(data)
     local result = Citizen.Await(alertDialogPromise)
     alertDialogPromise = nil
 
-    -- Restore focus
-    SetNuiFocus(isMenuOpen and false or false, false)
+    -- Restore focus: if menu is open keep cursor, otherwise release
+    if isMenuOpen then
+        SetNuiFocus(true, true)
+    else
+        SetNuiFocus(false, false)
+    end
 
     return result
 end
@@ -740,7 +778,6 @@ RegisterNUICallback('alertDialogResult', function(data, cb)
     if alertDialogPromise then
         alertDialogPromise:resolve(data.result) -- 'confirm' or 'cancel'
     end
-    SetNuiFocus(false, false)
     cb('ok')
 end)
 
@@ -786,6 +823,7 @@ exports('CreateBoxZone', CreateBoxZone)
 
 -- Utilities
 exports('RequestModel', RequestModel)
+exports('RequestAnimDict', RequestAnimDict)
 
 -----------------------
 -- Events
