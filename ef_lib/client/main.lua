@@ -378,13 +378,14 @@ end
 -----------------------
 
 -- Show a button hint (key, label, optional id for multiple hints)
-local function ShowHint(key, label, id)
+local function ShowHint(key, label, id, icon)
     SendNUIMessage({
         action = 'showHint',
         data = {
-            key = key,
+            key = key or '',
             label = label,
-            id = id
+            id = id,
+            icon = icon
         }
     })
 end
@@ -834,8 +835,8 @@ RegisterNetEvent('ef_lib:closeMenu', CloseMenu)
 RegisterNetEvent('ef_lib:notify', function(type, title, message, duration)
     SendNotification(type, title, message, duration)
 end)
-RegisterNetEvent('ef_lib:showHint', function(key, label, id)
-    ShowHint(key, label, id)
+RegisterNetEvent('ef_lib:showHint', function(key, label, id, icon)
+    ShowHint(key, label, id, icon)
 end)
 RegisterNetEvent('ef_lib:hideHint', function(id)
     HideHint(id)

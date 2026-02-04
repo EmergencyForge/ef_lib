@@ -5,6 +5,7 @@ export interface HintData {
   key: string           // The key to press (e.g., "E", "F", "G")
   label: string         // The action label (e.g., "Open Shop", "Talk")
   id?: string           // Optional ID for multiple hints
+  icon?: string         // Optional FontAwesome icon (e.g., "fa-solid fa-tv")
 }
 
 export const useHintStore = defineStore('hint', () => {

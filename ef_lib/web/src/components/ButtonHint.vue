@@ -2,6 +2,13 @@
 import { useHintStore } from '@/stores/hint'
 
 const hintStore = useHintStore()
+
+function resolveIconClass(icon: string): string {
+  if (!icon) return ''
+  if (/^fa-(solid|regular|brands|light|thin|duotone) /.test(icon)) return icon
+  if (icon.startsWith('fa-')) return 'fa-solid ' + icon
+  return 'fa-solid fa-' + icon
+}
 </script>
 
 <template>
@@ -13,7 +20,10 @@ const hintStore = useHintStore()
           :key="hint.id || hint.key"
           class="hint-item"
         >
-          <div class="hint-key">
+          <div v-if="hint.icon" class="hint-badge hint-icon">
+            <i :class="resolveIconClass(hint.icon)"></i>
+          </div>
+          <div v-else-if="hint.key" class="hint-badge hint-key">
             {{ hint.key }}
           </div>
           <div class="hint-label">{{ hint.label }}</div>
@@ -27,17 +37,16 @@ const hintStore = useHintStore()
 .hints-container {
   position: fixed;
   bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 40px;
   z-index: 1000;
   pointer-events: none;
 }
 
 .hints-list {
   display: flex;
-  flex-direction: row;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
 }
 
 .hint-item {
@@ -51,7 +60,7 @@ const hintStore = useHintStore()
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
-.hint-key {
+.hint-badge {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,11 +70,18 @@ const hintStore = useHintStore()
   background: rgba(var(--accent-rgb), 0.15);
   border: 1px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 7px;
+  color: var(--accent-color);
+}
+
+.hint-key {
   font-size: 13px;
   font-weight: 700;
-  color: var(--accent-color);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.hint-icon {
+  font-size: 16px;
 }
 
 .hint-label {
@@ -84,7 +100,7 @@ const hintStore = useHintStore()
 .hints-container-enter-from,
 .hints-container-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(16px);
+  transform: translateX(-16px);
 }
 
 /* Individual hint transitions */
@@ -95,12 +111,12 @@ const hintStore = useHintStore()
 
 .hint-enter-from {
   opacity: 0;
-  transform: translateY(12px) scale(0.95);
+  transform: translateX(-12px) scale(0.95);
 }
 
 .hint-leave-to {
   opacity: 0;
-  transform: translateY(-8px) scale(0.95);
+  transform: translateX(-8px) scale(0.95);
 }
 
 .hint-move {
