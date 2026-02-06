@@ -447,3 +447,241 @@ ef_lib/
     │   └── composables/    # NUI Kommunikation
     └── dist/               # Gebaute Dateien
 ```
+
+---
+
+## Minigame System
+
+Das Minigame-System bietet drei integrierte Minispiele die als Skill-Checks genutzt werden können. Alle blockieren den aktuellen Thread und geben `true` (Erfolg) oder `false` (Fehlgeschlagen) zurück.
+
+### Grundnutzung
+
+```lua
+-- Einfacher Aufruf
+local success = exports.ef_lib:Minigame('lockpick', 'medium')
+
+if success then
+    -- Spieler hat es geschafft
+else
+    -- Spieler hat versagt
+end
+```
+
+### Parameter
+
+| Parameter | Typ | Pflicht | Beschreibung |
+|-----------|-----|---------|-------------|
+| `gameType` | string | ✅ | `'lockpick'`, `'safedial'` oder `'reactionchain'` |
+| `difficulty` | string | ❌ | `'easy'`, `'medium'`, `'hard'` oder `'extreme'` (Standard: `'medium'`) |
+| `retries` | number | ❌ | Eigene Anzahl Versuche (überschreibt Standard der Schwierigkeit) |
+
+### Verfügbare Minigames
+
+#### 🔐 Lockpick (Pin-Tumbler Schloss)
+Pins bewegen sich auf und ab. Spieler drückt `SPACE` wenn der Pin in der grünen Zone (Scherlinie) ist.
+
+```lua
+local success = exports.ef_lib:Minigame('lockpick', 'hard')
+```
+
+| Schwierigkeit | Pins | Zone | Zeit | Versuche |
+|---------------|------|------|------|----------|
+| easy | 3 | groß | 30s | 4 |
+| medium | 5 | mittel | 20s | 3 |
+| hard | 6 | klein | 15s | 2 |
+| extreme | 7 | winzig | 10s | 1 |
+
+**Ideal für:** Schlösser knacken, Fahrzeuge aufbrechen, Türen öffnen
+
+#### 🔐 Safe Dial (Kombinations-Tresor)
+Drehrad mit Zahlen. Spieler dreht mit `A`/`D` und bestätigt mit `SPACE` bei der richtigen Zahl. Mehrere Codes hintereinander, Richtung wechselt (links/rechts).
+
+```lua
+local success = exports.ef_lib:Minigame('safedial', 'medium')
+```
+
+| Schwierigkeit | Codes | Toleranz | Zeit | Versuche |
+|---------------|-------|----------|------|----------|
+| easy | 2 | ±4 | 30s | 4 |
+| medium | 3 | ±3 | 20s | 3 |
+| hard | 4 | ±2 | 15s | 2 |
+| extreme | 5 | ±1 | 10s | 1 |
+
+**Ideal für:** Tresore, Safes, Schließfächer, Waffenschränke
+
+#### ⚡ Reaction Chain (Reaktionstest)
+Farbige Felder leuchten zufällig auf. Spieler drückt `1`/`2`/`3`/`4` bevor die Zeit abläuft. Wird schneller mit jedem Treffer.
+
+```lua
+local success = exports.ef_lib:Minigame('reactionchain', 'hard')
+```
+
+| Schwierigkeit | Kette | Reaktion | Zeit | Versuche | Tasten |
+|---------------|-------|----------|------|----------|--------|
+| easy | 6 | 1200ms | 30s | 4 | 3 |
+| medium | 8 | 900ms | 20s | 3 | 4 |
+| hard | 12 | 700ms | 15s | 2 | 4 |
+| extreme | 16 | 550ms | 10s | 1 | 4 |
+
+**Ideal für:** CPR/Wiederbelebung, Reparaturen, Bomben entschärfen, Hacking
+
+### Custom Retries
+
+Alle Minigames unterstützen eine optionale Anzahl eigener Versuche:
+
+```lua
+-- Lockpicking mit 5 Versuchen statt dem Standard
+local success = exports.ef_lib:Minigame('lockpick', 'hard', 5)
+
+-- Safe mit nur 1 Versuch auf mittlerer Schwierigkeit
+local success = exports.ef_lib:Minigame('safedial', 'medium', 1)
+```
+
+### Retry-System
+
+Bei einem Fehlversuch werden alle Fortschritte (Pins, Codes, Kette) zurückgesetzt, aber der **Timer läuft weiter**. Sind alle Versuche aufgebraucht, endet das Spiel sofort als Fehlschlag.
+
+### Praxisbeispiele
+
+```lua
+-- Fahrzeug aufbrechen
+RegisterCommand('lockpick', function()
+    local success = exports.ef_lib:Minigame('lockpick', 'hard')
+    if success then
+        exports.ef_lib:SendNotification('success', 'Aufgebrochen', 'Fahrzeug wurde geöffnet')
+    else
+        exports.ef_lib:SendNotification('error', 'Fehlgeschlagen', 'Das Schloss hat sich verklemmt')
+    end
+end)
+
+-- Tresor knacken
+RegisterCommand('safecrack', function()
+    local success = exports.ef_lib:Minigame('safedial', 'extreme')
+    if success then
+        TriggerServerEvent('safe:opened', safeId)
+    end
+end)
+
+-- Wiederbelebung
+RegisterCommand('cpr', function()
+    local success = exports.ef_lib:Minigame('reactionchain', 'medium')
+    if success then
+        TriggerServerEvent('medical:revive', targetId)
+    end
+end)
+```
+
+---
+
+## ProgressBar System
+
+Das ProgressBar-System bietet eine blockierende Fortschrittsanzeige mit optionaler Animation, Prop und Cancel-Möglichkeit. Der Spieler behält die Kamera-/Bewegungskontrolle (kein NUI-Focus nötig).
+
+### Grundnutzung
+
+```lua
+-- Einfache Progressbar
+local completed = exports.ef_lib:ProgressBar({
+    label = 'Fahrzeug reparieren...',
+    duration = 5000,
+})
+
+if completed then
+    -- Aktion abgeschlossen
+else
+    -- Abgebrochen
+end
+```
+
+### Vollständige Parameter
+
+```lua
+local completed = exports.ef_lib:ProgressBar({
+    label = 'Motor reparieren...',          -- Text der angezeigt wird
+    duration = 8000,                         -- Dauer in Millisekunden
+    icon = 'fa-wrench',                      -- FontAwesome Icon (optional)
+    canCancel = true,                        -- Abbrechbar mit X-Taste (default: false)
+    cancelKey = 'X',                         -- Cancel-Taste (default: 'X')
+    anim = {                                 -- Animation (optional)
+        dict = 'mini@repair',
+        clip = 'fixing_a_player',
+        flag = 49,                           -- Anim flags (default: 49)
+        blendIn = 3.0,                       -- Blend-In Speed (default: 3.0)
+        blendOut = 1.0,                      -- Blend-Out Speed (default: 1.0)
+    },
+    prop = {                                 -- Prop zum Anhängen (optional)
+        model = 'prop_tool_wrench',
+        bone = 60309,                        -- Bone ID (default: SKEL_R_Hand / 60309)
+        pos = vector3(0.0, 0.0, 0.0),       -- Offset Position
+        rot = vector3(0.0, 0.0, 0.0),       -- Offset Rotation
+    },
+    disableControls = {                      -- Controls deaktivieren (optional)
+        move = true,                         -- Bewegung (WASD/Sprint)
+        car = false,                         -- Fahrzeug-Steuerung
+        combat = true,                       -- Waffen/Angriff
+        mouse = false,                       -- Kamera/Maus
+    },
+})
+```
+
+### Hilfsfunktionen
+
+```lua
+-- Prüfen ob eine Progressbar aktiv ist
+local active = exports.ef_lib:IsProgressBarActive()
+
+-- Aktive Progressbar programmatisch abbrechen
+local wasCancelled = exports.ef_lib:CancelProgressBar()
+```
+
+### Server-seitige Events
+
+```lua
+-- Progressbar für einen Spieler starten
+TriggerClientEvent('ef_lib:progressBar', source, {
+    label = 'Verarbeitung...',
+    duration = 3000,
+})
+
+-- Aktive Progressbar abbrechen
+TriggerClientEvent('ef_lib:cancelProgressBar', source)
+```
+
+### Praxisbeispiele
+
+```lua
+-- Fahrzeug reparieren mit Animation und Prop
+RegisterCommand('repair', function()
+    local completed = exports.ef_lib:ProgressBar({
+        label = 'Fahrzeug reparieren...',
+        duration = 10000,
+        icon = 'fa-wrench',
+        canCancel = true,
+        anim = { dict = 'mini@repair', clip = 'fixing_a_player' },
+        prop = { model = 'prop_tool_wrench' },
+        disableControls = { move = true, combat = true },
+    })
+    if completed then
+        local veh = GetClosestVehicle(GetEntityCoords(PlayerPedId()), 5.0, 0, 70)
+        if DoesEntityExist(veh) then
+            SetVehicleFixed(veh)
+        end
+        exports.ef_lib:SendNotification('success', 'Repariert', 'Fahrzeug wurde repariert')
+    else
+        exports.ef_lib:SendNotification('error', 'Abgebrochen', 'Reparatur abgebrochen')
+    end
+end)
+
+-- Medizinische Behandlung
+RegisterCommand('treat', function()
+    local completed = exports.ef_lib:ProgressBar({
+        label = 'Patienten behandeln...',
+        duration = 6000,
+        icon = 'fa-heart-pulse',
+        disableControls = { move = true, combat = true },
+    })
+    if completed then
+        TriggerServerEvent('medical:treatPatient', targetId)
+    end
+end)
+```

@@ -230,6 +230,37 @@ else
         exports.ef_lib:HideHint('test_hint')
     end, false)
 
+    -- ProgressBar: Einfach
+    RegisterCommand('efprogress', function()
+        local completed = exports.ef_lib:ProgressBar({
+            label = 'Verarbeitung...',
+            duration = 5000,
+            icon = 'fa-spinner',
+            canCancel = true,
+        })
+        if completed then
+            exports.ef_lib:SendNotification('success', 'Fertig', 'Aktion abgeschlossen!', 3000)
+        else
+            exports.ef_lib:SendNotification('error', 'Abgebrochen', 'Aktion wurde abgebrochen', 3000)
+        end
+    end, false)
+
+    -- ProgressBar: Mit Animation + Prop + Control-Disabling
+    RegisterCommand('efrepair', function()
+        local completed = exports.ef_lib:ProgressBar({
+            label = 'Fahrzeug reparieren...',
+            duration = 8000,
+            icon = 'fa-wrench',
+            canCancel = true,
+            anim = { dict = 'mini@repair', clip = 'fixing_a_player' },
+            prop = { model = 'prop_tool_wrench' },
+            disableControls = { move = true, combat = true },
+        })
+        if completed then
+            exports.ef_lib:SendNotification('success', 'Repariert', 'Fahrzeug wurde repariert!', 3000)
+        end
+    end, false)
+
 end
 
 --[[
@@ -247,6 +278,7 @@ end
     | lib.showTextUI(text)                            | exports.ef_lib:ShowHint(key, label, id)             |
     | lib.hideTextUI()                                | exports.ef_lib:HideHint() / HideAllHints()          |
     | lib.registerContext/showContext                  | exports.ef_lib:OpenMenu({...})                      |
+    | lib.progressBar({...})                          | exports.ef_lib:ProgressBar({...})                   |
     
     ============================================================
     FELDTYPEN FÜR InputDialog:
