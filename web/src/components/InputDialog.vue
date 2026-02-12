@@ -71,6 +71,7 @@ function handleKeyDown(event: KeyboardEvent) {
   } else if (event.key === 'Enter' && !(event.target instanceof HTMLTextAreaElement)) {
     // Don't submit on Enter inside textareas
     event.preventDefault()
+    event.stopPropagation()
     confirm()
   }
 }

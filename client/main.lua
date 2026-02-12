@@ -10,11 +10,13 @@
 ]]
 
 local isMenuOpen = false
+local menuHasCursor = true
 local contextMenuOpen = false
 local activeContextCallbacks = {}
 local contextNavigated = false
 local inputDialogPromise = nil
 local alertDialogPromise = nil
+local minigamePromise = nil
 
 -----------------------
 -- Callback System
@@ -299,11 +301,13 @@ end
 -----------------------
 
 -- Open the menu (allows player movement while open)
+-- menuData.showCursor (boolean, default true) — set false to hide mouse cursor
 local function OpenMenu(menuData)
     if isMenuOpen then return end
 
     isMenuOpen = true
-    SetNuiFocus(true, true)
+    menuHasCursor = menuData and menuData.showCursor ~= false
+    SetNuiFocus(true, menuHasCursor)
     SendNUIMessage({
         action = 'openMenu',
         data = menuData or {}
@@ -327,12 +331,15 @@ local function CloseMenu()
     SendNUIMessage({
         action = 'closeMenu'
     })
+
+    -- Notify listeners that the menu was closed
+    TriggerEvent('ef_lib:menuClosed')
 end
 
 -- Toggle menu visibility (legacy support)
 local function ToggleMenu(show)
     isMenuOpen = show
-    SetNuiFocus(show, show)
+    SetNuiFocus(show, show and menuHasCursor)
     SendNUIMessage({
         action = 'setVisible',
         data = show
@@ -468,7 +475,18 @@ RegisterNUICallback('closeMenu', function(data, cb)
 end)
 
 RegisterNUICallback('setKeyboardFocus', function(data, cb)
-    -- Menu now always has full NUI focus, this is a no-op
+    if data.enabled then
+        -- Enable cursor so the user can type in input fields
+        SetNuiFocus(true, true)
+    else
+        -- Restore the menu's cursor preference
+        SetNuiFocus(true, menuHasCursor)
+    end
+    cb('ok')
+end)
+
+RegisterNUICallback('keyPress', function(data, cb)
+    TriggerEvent('ef_lib:keyPress', data.key)
     cb('ok')
 end)
 
@@ -726,7 +744,7 @@ local function InputDialog(title, fields)
 
     -- Restore focus: if menu is open keep cursor, otherwise release
     if isMenuOpen then
-        SetNuiFocus(true, true)
+        SetNuiFocus(true, menuHasCursor)
     else
         SetNuiFocus(false, false)
     end
@@ -776,7 +794,7 @@ local function AlertDialog(data)
 
     -- Restore focus: if menu is open keep cursor, otherwise release
     if isMenuOpen then
-        SetNuiFocus(true, true)
+        SetNuiFocus(true, menuHasCursor)
     else
         SetNuiFocus(false, false)
     end
@@ -793,6 +811,276 @@ RegisterNUICallback('alertDialogResult', function(data, cb)
 end)
 
 -----------------------
+-- Minigame System
+-----------------------
+
+--- Open a minigame and wait for the result (blocks current thread)
+--- @param gameType string 'lockpick' | 'safedial' | 'reactionchain'
+--- @param difficulty? string 'easy' | 'medium' | 'hard' | 'extreme' (default: 'medium')
+--- @param retries? number Custom number of retries (overrides difficulty default)
+--- @return boolean success Whether the player completed the minigame
+local function Minigame(gameType, difficulty, retries)
+    if minigamePromise then
+        print('^3[EF_LIB] Minigame: Another minigame is already open^0')
+        return false
+    end
+
+    if type(gameType) ~= 'string' then
+        print('^1[EF_LIB] Minigame: gameType must be a string^0')
+        return false
+    end
+
+    local validTypes = { lockpick = true, safedial = true, reactionchain = true }
+    if not validTypes[gameType] then
+        print('^1[EF_LIB] Minigame: Invalid gameType "' .. tostring(gameType) .. '". Use: lockpick, safedial, reactionchain^0')
+        return false
+    end
+
+    minigamePromise = promise.new()
+
+    SetNuiFocus(true, true)
+
+    SendNUIMessage({
+        action = 'openMinigame',
+        data = {
+            type = gameType,
+            difficulty = difficulty or 'medium',
+            retries = retries or nil,
+        }
+    })
+
+    local result = Citizen.Await(minigamePromise)
+    minigamePromise = nil
+
+    if isMenuOpen then
+        SetNuiFocus(true, menuHasCursor)
+    else
+        SetNuiFocus(false, false)
+    end
+
+    return result == true
+end
+
+-- NUI Callback: receives result from Minigame Vue component
+RegisterNUICallback('minigameResult', function(data, cb)
+    if minigamePromise then
+        minigamePromise:resolve(data.success == true)
+    end
+    cb('ok')
+end)
+
+-----------------------
+-- ProgressBar System
+-----------------------
+
+local progressBarPromise = nil
+local progressBarActive = false
+
+--- Open a progressbar that blocks the current thread until completed or cancelled
+--- @param data table ProgressBar config:
+---   label: string          - Text to display
+---   duration: number       - Duration in ms
+---   icon?: string          - FontAwesome icon (e.g. 'fa-wrench', 'fa-solid fa-heart')
+---   canCancel?: boolean    - Allow cancellation (default: false)
+---   cancelKey?: string     - Key name for cancel (default: 'X' / INPUT_VEH_DUCK)
+---   anim?: table           - Animation { dict: string, clip: string, flag?: number, blendIn?: number, blendOut?: number }
+---   prop?: table           - Prop to attach { model: string, bone?: number, pos?: vec3, rot?: vec3 }
+---   disableControls?: table - { move?: bool, car?: bool, combat?: bool, mouse?: bool } (default: all false)
+--- @return boolean completed  true = finished, false = cancelled
+local function ProgressBar(data)
+    if progressBarPromise then
+        print('^3[EF_LIB] ProgressBar: Another progressbar is already active^0')
+        return false
+    end
+
+    if type(data) ~= 'table' then
+        print('^1[EF_LIB] ProgressBar: data must be a table^0')
+        return false
+    end
+
+    if not data.duration or data.duration <= 0 then
+        print('^1[EF_LIB] ProgressBar: duration must be > 0^0')
+        return false
+    end
+
+    progressBarPromise = promise.new()
+    progressBarActive = true
+
+    local ped = PlayerPedId()
+    local duration = data.duration
+    local canCancel = data.canCancel == true
+    local disableControls = data.disableControls or {}
+    local propEntity = nil
+
+    -- Start animation if specified
+    if data.anim and data.anim.dict and data.anim.clip then
+        if RequestAnimDict(data.anim.dict) then
+            TaskPlayAnim(
+                ped,
+                data.anim.dict,
+                data.anim.clip,
+                data.anim.blendIn or 3.0,
+                data.anim.blendOut or 1.0,
+                -1,
+                data.anim.flag or 49,
+                0, false, false, false
+            )
+        end
+    end
+
+    -- Attach prop if specified
+    if data.prop and data.prop.model then
+        local modelHash = type(data.prop.model) == 'string' and joaat(data.prop.model) or data.prop.model
+        if RequestModel(modelHash) then
+            local pos = data.prop.pos or vector3(0.0, 0.0, 0.0)
+            local rot = data.prop.rot or vector3(0.0, 0.0, 0.0)
+            local bone = data.prop.bone or 60309 -- SKEL_R_Hand
+
+            propEntity = CreateObject(modelHash, 0.0, 0.0, 0.0, true, true, true)
+            AttachEntityToEntity(
+                propEntity, ped,
+                GetPedBoneIndex(ped, bone),
+                pos.x, pos.y, pos.z,
+                rot.x, rot.y, rot.z,
+                true, true, false, true, 0, true
+            )
+            SetModelAsNoLongerNeeded(modelHash)
+        end
+    end
+
+    -- Send to NUI
+    SendNUIMessage({
+        action = 'startProgressBar',
+        data = {
+            label = data.label or '',
+            duration = duration,
+            icon = data.icon,
+            canCancel = canCancel,
+            cancelKey = data.cancelKey or 'X',
+        }
+    })
+
+    -- Monitor thread: cancel key detection + control disabling + completion check
+    local startTime = GetGameTimer()
+
+    CreateThread(function()
+        while progressBarActive do
+            local elapsed = GetGameTimer() - startTime
+
+            -- Completed
+            if elapsed >= duration then
+                progressBarActive = false
+                -- Close NUI
+                SendNUIMessage({ action = 'cancelProgressBar' })
+                -- Cleanup
+                if data.anim then
+                    StopAnimTask(ped, data.anim.dict, data.anim.clip, 1.0)
+                end
+                if propEntity and DoesEntityExist(propEntity) then
+                    DeleteEntity(propEntity)
+                    propEntity = nil
+                end
+                if progressBarPromise then
+                    progressBarPromise:resolve(true)
+                end
+                return
+            end
+
+            -- Cancel detection (47 = INPUT_VEH_DUCK / X key)
+            if canCancel and IsControlJustPressed(0, 73) then
+                progressBarActive = false
+                SendNUIMessage({ action = 'cancelProgressBar' })
+                if data.anim then
+                    StopAnimTask(ped, data.anim.dict, data.anim.clip, 1.0)
+                end
+                if propEntity and DoesEntityExist(propEntity) then
+                    DeleteEntity(propEntity)
+                    propEntity = nil
+                end
+                if progressBarPromise then
+                    progressBarPromise:resolve(false)
+                end
+                return
+            end
+
+            -- Disable controls while active
+            if disableControls.move then
+                DisableControlAction(0, 30, true)  -- MoveLeftRight
+                DisableControlAction(0, 31, true)  -- MoveUpDown
+                DisableControlAction(0, 36, true)  -- Duck
+                DisableControlAction(0, 21, true)  -- Sprint
+            end
+            if disableControls.car then
+                DisableControlAction(0, 63, true)  -- VehMoveLeftRight
+                DisableControlAction(0, 64, true)  -- VehMoveUpDown
+                DisableControlAction(0, 71, true)  -- VehAccelerate
+                DisableControlAction(0, 72, true)  -- VehBrake
+                DisableControlAction(0, 75, true)  -- VehExit
+            end
+            if disableControls.combat then
+                DisableControlAction(0, 24, true)  -- Attack
+                DisableControlAction(0, 25, true)  -- Aim
+                DisableControlAction(0, 47, true)  -- Weapon
+                DisableControlAction(0, 58, true)  -- Throw Grenade
+                DisableControlAction(0, 140, true) -- MeleeAttackLight
+                DisableControlAction(0, 141, true) -- MeleeAttackHeavy
+                DisableControlAction(0, 142, true) -- MeleeAttackAlternate
+                DisableControlAction(0, 143, true) -- MeleeBlock
+            end
+            if disableControls.mouse then
+                DisableControlAction(0, 1, true)  -- LookLeftRight
+                DisableControlAction(0, 2, true)  -- LookUpDown
+            end
+
+            Wait(0)
+        end
+    end)
+
+    -- Block until resolved
+    local result = Citizen.Await(progressBarPromise)
+    progressBarPromise = nil
+
+    return result == true
+end
+
+-- NUI Callback: cancel from NUI side (user pressed cancel key in browser)
+RegisterNUICallback('progressBarResult', function(data, cb)
+    if progressBarActive and data.cancelled then
+        progressBarActive = false
+        local ped = PlayerPedId()
+        ClearPedTasks(ped)
+        if progressBarPromise then
+            progressBarPromise:resolve(false)
+        end
+    end
+    cb('ok')
+end)
+
+--- Check if a progressbar is currently active
+--- @return boolean
+local function IsProgressBarActive()
+    return progressBarActive
+end
+
+--- Cancel the currently active progressbar programmatically
+--- @return boolean cancelled Whether a progressbar was actually cancelled
+local function CancelProgressBar()
+    if not progressBarActive then return false end
+
+    progressBarActive = false
+    SendNUIMessage({ action = 'cancelProgressBar' })
+
+    local ped = PlayerPedId()
+    ClearPedTasks(ped)
+
+    if progressBarPromise then
+        progressBarPromise:resolve(false)
+    end
+
+    return true
+end
+
+-----------------------
 -- Exports
 -----------------------
 
@@ -806,6 +1094,14 @@ exports('CloseMenu', CloseMenu)
 exports('ToggleMenu', ToggleMenu)
 exports('IsMenuOpen', function() return isMenuOpen end)
 exports('GetUISettingsMenu', GetUISettingsMenu)
+exports('UpdateMenuItem', function(id, updates)
+    if not id or not updates then return end
+    updates.id = id
+    SendNUIMessage({ action = 'updateMenuItem', data = updates })
+end)
+exports('NavigateMenu', function(action)
+    SendNUIMessage({ action = 'navigate', data = action })
+end)
 
 -- Notifications
 exports('SendNotification', SendNotification)
@@ -823,6 +1119,14 @@ exports('HideAllHints', HideAllHints)
 -- Dialogs
 exports('InputDialog', InputDialog)
 exports('AlertDialog', AlertDialog)
+
+-- Minigames
+exports('Minigame', Minigame)
+
+-- ProgressBar
+exports('ProgressBar', ProgressBar)
+exports('IsProgressBarActive', IsProgressBarActive)
+exports('CancelProgressBar', CancelProgressBar)
 
 -- Context Menu (ox_lib Compatibility)
 exports('RegisterContext', RegisterContext)
@@ -853,3 +1157,12 @@ RegisterNetEvent('ef_lib:hideHint', function(id)
     HideHint(id)
 end)
 RegisterNetEvent('ef_lib:hideAllHints', HideAllHints)
+RegisterNetEvent('ef_lib:minigame', function(gameType, difficulty, retries)
+    Minigame(gameType, difficulty, retries)
+end)
+RegisterNetEvent('ef_lib:progressBar', function(data)
+    ProgressBar(data)
+end)
+RegisterNetEvent('ef_lib:cancelProgressBar', function()
+    CancelProgressBar()
+end)

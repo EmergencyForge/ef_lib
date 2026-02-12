@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useMenuStore, type MenuItem } from '@/stores/menu'
 import { useSettingsStore } from '@/stores/settings'
 import { useNotificationStore } from '@/stores/notification'
@@ -39,30 +39,80 @@ function handleKeyDown(event: KeyboardEvent) {
 
   switch (event.key) {
     case 'ArrowUp':
-    case 'w':
-    case 'W':
       event.preventDefault()
       navigateUp()
       break
     case 'ArrowDown':
-    case 's':
-    case 'S':
       event.preventDefault()
       navigateDown()
       break
-    case 'Enter':
+    case 'ArrowLeft':
+      if (selectedItem?.type === 'number') {
+        event.preventDefault()
+        menuStore.decrementNumber(selectedItem.id)
+        sendAction(selectedItem)
+      } else if (menuStore.canGoBack()) {
+        event.preventDefault()
+        menuStore.goBack()
+      }
+      break
     case 'ArrowRight':
+      if (selectedItem?.type === 'number') {
+        event.preventDefault()
+        menuStore.incrementNumber(selectedItem.id)
+        sendAction(selectedItem)
+      } else {
+        event.preventDefault()
+        activateCurrentItem()
+      }
+      break
+    case 'w':
+    case 'W':
+    case 'a':
+    case 'A':
+    case 's':
+    case 'S':
+    case 'd':
+    case 'D':
+      event.preventDefault()
+      fetchNui('keyPress', { key: event.key.toLowerCase() })
+      break
+    case 'Enter':
       event.preventDefault()
       activateCurrentItem()
       break
-    case 'Escape':
     case 'Backspace':
       event.preventDefault()
-      closeMenu()
+      if (menuStore.canGoBack()) {
+        menuStore.goBack()
+      } else {
+        closeMenu()
+      }
+      break
+    case 'Escape':
+      event.preventDefault()
+      if (menuStore.canGoBack()) {
+        menuStore.goBack()
+      } else {
+        closeMenu()
+      }
       break
 
   }
 }
+
+// Auto-scroll selected item into view whenever selection or items change
+watch(
+  () => [menuStore.selectedIndex, menuStore.items],
+  () => {
+    nextTick(() => {
+      const el = document.querySelector('.menu-items .menu-item.selected') as HTMLElement | null
+      if (el) {
+        el.scrollIntoView({ block: 'nearest' })
+      }
+    })
+  }
+)
 
 function navigateUp() {
   menuStore.selectPrevious()
@@ -201,7 +251,7 @@ function sendAction(item: MenuItem) {
     type: item.type || 'button',
     label: item.label,
     checked: item.checked,
-    value: item.value,
+    value: item.type === 'number' ? item.current : item.value,
     data: item.data
   })
 }
@@ -281,8 +331,35 @@ function handleNuiMessage(event: MessageEvent) {
     case 'down':
       navigateDown()
       break
+    case 'left': {
+      const item = getCurrentSelectedItem()
+      if (item?.type === 'number') {
+        menuStore.decrementNumber(item.id)
+        sendAction(item)
+      } else if (menuStore.canGoBack()) {
+        menuStore.goBack()
+      }
+      break
+    }
+    case 'right': {
+      const item = getCurrentSelectedItem()
+      if (item?.type === 'number') {
+        menuStore.incrementNumber(item.id)
+        sendAction(item)
+      } else {
+        activateCurrentItem()
+      }
+      break
+    }
     case 'select':
       activateCurrentItem()
+      break
+    case 'back':
+      if (menuStore.canGoBack()) {
+        menuStore.goBack()
+      } else {
+        closeMenu()
+      }
       break
     case 'close':
       closeMenu()
@@ -364,6 +441,20 @@ onUnmounted(() => {
                 {{ opt.charAt(0).toUpperCase() + opt.slice(1) }}
               </span>
             </div>
+            <!-- Number selector -->
+            <div v-if="item.type === 'number'" class="item-number">
+              <button class="number-arrow" @click.stop="menuStore.decrementNumber(item.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span class="number-value">{{ item.current ?? item.min ?? 0 }}</span>
+              <button class="number-arrow" @click.stop="menuStore.incrementNumber(item.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
             <!-- Submenu indicator -->
             <div v-if="item.submenu" class="item-indicator submenu">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -371,7 +462,7 @@ onUnmounted(() => {
               </svg>
             </div>
             <!-- Arrow indicator for buttons (not for disabled/readonly) -->
-            <div v-else-if="!item.disabled && !item.readonly && item.type !== 'input' && item.type !== 'checkbox' && item.type !== 'select'" class="item-indicator">
+            <div v-else-if="!item.disabled && !item.readonly && item.type !== 'input' && item.type !== 'checkbox' && item.type !== 'select' && item.type !== 'number'" class="item-indicator">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"></polyline>
               </svg>
@@ -557,6 +648,43 @@ onUnmounted(() => {
 .select-option.active {
   background: var(--accent-color);
   color: #ffffff;
+}
+
+/* Number selector */
+.item-number {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.number-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.number-arrow:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--accent-color);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.number-value {
+  min-width: 36px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  padding: 4px 6px;
 }
 
 /* Input */

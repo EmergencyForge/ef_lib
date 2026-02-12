@@ -5,11 +5,15 @@ import Notifications from '@/components/Notifications.vue'
 import ButtonHint from '@/components/ButtonHint.vue'
 import InputDialog from '@/components/InputDialog.vue'
 import AlertDialog from '@/components/AlertDialog.vue'
+import Minigame from '@/components/Minigame.vue'
+import ProgressBar from '@/components/ProgressBar.vue'
 import { useMenuStore } from '@/stores/menu'
 import { useNotificationStore } from '@/stores/notification'
 import { useSettingsStore } from '@/stores/settings'
 import { useHintStore } from '@/stores/hint'
 import { useDialogStore } from '@/stores/dialog'
+import { useMinigameStore, type MinigameConfig } from '@/stores/minigame'
+import { useProgressStore, type ProgressBarData } from '@/stores/progress'
 import { useNuiEvent, fetchNui, isInGame } from '@/composables/useNui'
 
 const menuStore = useMenuStore()
@@ -17,6 +21,8 @@ const notificationStore = useNotificationStore()
 const settingsStore = useSettingsStore()
 const hintStore = useHintStore()
 const dialogStore = useDialogStore()
+const minigameStore = useMinigameStore()
+const progressStore = useProgressStore()
 
 // ─── Menu Events ───
 
@@ -34,6 +40,13 @@ useNuiEvent('pushSubmenu', (data: { title?: string; items: any[] }) => {
 
 useNuiEvent('closeMenu', () => {
   menuStore.closeMenu()
+})
+
+useNuiEvent('updateMenuItem', (data: { id: string; [key: string]: any }) => {
+  if (data.id) {
+    const { id, ...updates } = data
+    menuStore.updateItem(id, updates)
+  }
 })
 
 // ─── Notification Events ───
@@ -99,6 +112,26 @@ useNuiEvent('openAlertDialog', (data: {
 
 useNuiEvent('closeAlertDialog', () => {
   dialogStore.closeAlertDialog()
+})
+
+// ─── Minigame Events ───
+
+useNuiEvent('openMinigame', (data: MinigameConfig) => {
+  minigameStore.openMinigame(data)
+})
+
+useNuiEvent('closeMinigame', () => {
+  minigameStore.closeMinigame()
+})
+
+// ─── ProgressBar Events ───
+
+useNuiEvent('startProgressBar', (data: ProgressBarData) => {
+  progressStore.startProgress(data)
+})
+
+useNuiEvent('cancelProgressBar', () => {
+  progressStore.closeProgress()
 })
 
 // ─── Settings Submenu ───
@@ -176,6 +209,8 @@ onMounted(() => {
     <ButtonHint />
     <InputDialog />
     <AlertDialog />
+    <Minigame />
+    <ProgressBar />
   </div>
 </template>
 

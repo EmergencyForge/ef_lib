@@ -17,8 +17,8 @@ export interface MenuItem {
   readonly?: boolean
   disabled?: boolean
   data?: unknown
-  // Item types: 'button' (default), 'checkbox', 'input', 'select'
-  type?: 'button' | 'checkbox' | 'input' | 'select'
+  // Item types: 'button' (default), 'checkbox', 'input', 'select', 'number'
+  type?: 'button' | 'checkbox' | 'input' | 'select' | 'number'
   // For checkbox
   checked?: boolean
   // For input
@@ -27,6 +27,11 @@ export interface MenuItem {
   inputType?: 'text' | 'password' | 'number'
   // For select
   options?: string[]
+  // For number
+  min?: number
+  max?: number
+  step?: number
+  current?: number
   // For submenu
   submenu?: MenuData
   // For confirmation dialog (true for defaults, or config object)
@@ -36,6 +41,7 @@ export interface MenuItem {
 export interface MenuData {
   title?: string
   items: MenuItem[]
+  showCursor?: boolean
 }
 
 interface MenuHistoryEntry {
@@ -46,6 +52,7 @@ interface MenuHistoryEntry {
 
 export const useMenuStore = defineStore('menu', () => {
   const isVisible = ref(false)
+  const cursorEnabled = ref(true)
   const title = ref('')
   const items = ref<MenuItem[]>([])
   const selectedIndex = ref(0)
@@ -71,6 +78,7 @@ export const useMenuStore = defineStore('menu', () => {
     title.value = data.title || 'Menu'
     items.value = data.items || []
     selectedIndex.value = 0
+    cursorEnabled.value = data.showCursor !== false
     isVisible.value = true
   }
 
@@ -150,6 +158,30 @@ export const useMenuStore = defineStore('menu', () => {
     const item = items.value.find(i => i.id === id)
     if (item && item.type === 'input') {
       item.value = value
+    }
+  }
+
+  function incrementNumber(id: string) {
+    const item = items.value.find(i => i.id === id)
+    if (item && item.type === 'number') {
+      const step = item.step ?? 1
+      const max = item.max ?? Infinity
+      const min = item.min ?? -Infinity
+      const current = item.current ?? item.min ?? 0
+      const next = current + step
+      item.current = next > max ? min : next
+    }
+  }
+
+  function decrementNumber(id: string) {
+    const item = items.value.find(i => i.id === id)
+    if (item && item.type === 'number') {
+      const step = item.step ?? 1
+      const min = item.min ?? -Infinity
+      const max = item.max ?? Infinity
+      const current = item.current ?? item.min ?? 0
+      const next = current - step
+      item.current = next < min ? max : next
     }
   }
 
@@ -243,6 +275,7 @@ export const useMenuStore = defineStore('menu', () => {
 
   return {
     isVisible,
+    cursorEnabled,
     title,
     items,
     selectedIndex,
@@ -264,6 +297,8 @@ export const useMenuStore = defineStore('menu', () => {
     updateItem,
     toggleCheckbox,
     setInputValue,
+    incrementNumber,
+    decrementNumber,
     cycleSelectOption,
     showConfirmation,
     confirmAction,
