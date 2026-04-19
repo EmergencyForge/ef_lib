@@ -11,6 +11,7 @@
 
 local isMenuOpen = false
 local menuHasCursor = true
+local menuAllowMove = true
 local contextMenuOpen = false
 local activeContextCallbacks = {}
 local contextNavigated = false
@@ -300,14 +301,27 @@ end
 -- Core Menu Functions
 -----------------------
 
--- Open the menu (allows player movement while open)
--- menuData.showCursor (boolean, default true) — set false to hide mouse cursor
+-- Open the menu
+-- menuData.showCursor (boolean, optional) — overrides Config.ShowCursor per-menu
+-- menuData.allowMove (boolean, optional) — overrides Config.AllowMove per-menu
 local function OpenMenu(menuData)
     if isMenuOpen then return end
 
     isMenuOpen = true
-    menuHasCursor = menuData and menuData.showCursor ~= false
+    local showCursor = menuData and menuData.showCursor
+    if showCursor == nil then
+        showCursor = Config.ShowCursor ~= false
+    end
+    menuHasCursor = showCursor
+
+    local allowMove = menuData and menuData.allowMove
+    if allowMove == nil then
+        allowMove = Config.AllowMove ~= false
+    end
+    menuAllowMove = allowMove
+
     SetNuiFocus(true, menuHasCursor)
+    SetNuiFocusKeepInput(menuAllowMove)
     SendNUIMessage({
         action = 'openMenu',
         data = menuData or {}
@@ -327,6 +341,7 @@ local function CloseMenu()
     if not inputDialogPromise and not alertDialogPromise then
         SetNuiFocus(false, false)
     end
+    SetNuiFocusKeepInput(false)
 
     SendNUIMessage({
         action = 'closeMenu'
@@ -340,6 +355,7 @@ end
 local function ToggleMenu(show)
     isMenuOpen = show
     SetNuiFocus(show, show and menuHasCursor)
+    SetNuiFocusKeepInput(show and menuAllowMove)
     SendNUIMessage({
         action = 'setVisible',
         data = show
@@ -478,9 +494,11 @@ RegisterNUICallback('setKeyboardFocus', function(data, cb)
     if data.enabled then
         -- Enable cursor so the user can type in input fields
         SetNuiFocus(true, true)
+        SetNuiFocusKeepInput(false) -- Disable keepInput while typing
     else
-        -- Restore the menu's cursor preference
+        -- Restore the menu's cursor/movement preferences
         SetNuiFocus(true, menuHasCursor)
+        SetNuiFocusKeepInput(menuAllowMove)
     end
     cb('ok')
 end)
@@ -507,34 +525,39 @@ CreateThread(function()
             -- Disable pause menu
             DisableControlAction(0, 200, true)
 
-            -- ESC - Close menu
+            -- ESC - Close menu (always handle to prevent pause menu)
             if IsDisabledControlJustPressed(0, 200) then
                 CloseMenu()
             end
 
-            -- Arrow Up - Navigate up
-            if IsControlJustPressed(0, 172) then
-                SendNUIMessage({ action = 'navigate', data = 'up' })
-            end
+            -- When allowMove is true, NUI keyboard handler already processes
+            -- arrow keys / enter / backspace directly — skip game-side navigation
+            -- to avoid double-step (both NUI and game firing the same action).
+            if not menuAllowMove then
+                -- Arrow Up - Navigate up
+                if IsControlJustPressed(0, 172) then
+                    SendNUIMessage({ action = 'navigate', data = 'up' })
+                end
 
-            -- Arrow Down - Navigate down
-            if IsControlJustPressed(0, 173) then
-                SendNUIMessage({ action = 'navigate', data = 'down' })
-            end
+                -- Arrow Down - Navigate down
+                if IsControlJustPressed(0, 173) then
+                    SendNUIMessage({ action = 'navigate', data = 'down' })
+                end
 
-            -- Enter - Select item
-            if IsControlJustPressed(0, 191) then
-                SendNUIMessage({ action = 'navigate', data = 'select' })
-            end
+                -- Enter - Select item
+                if IsControlJustPressed(0, 191) then
+                    SendNUIMessage({ action = 'navigate', data = 'select' })
+                end
 
-            -- Backspace - Close menu
-            if IsControlJustPressed(0, 177) then
-                SendNUIMessage({ action = 'navigate', data = 'close' })
-            end
+                -- Backspace - Close menu
+                if IsControlJustPressed(0, 177) then
+                    SendNUIMessage({ action = 'navigate', data = 'close' })
+                end
 
-            -- Arrow Right - Select/Enter submenu
-            if IsControlJustPressed(0, 175) then
-                SendNUIMessage({ action = 'navigate', data = 'select' })
+                -- Arrow Right - Select/Enter submenu
+                if IsControlJustPressed(0, 175) then
+                    SendNUIMessage({ action = 'navigate', data = 'select' })
+                end
             end
         end
     end
@@ -727,8 +750,9 @@ local function InputDialog(title, fields)
 
     inputDialogPromise = promise.new()
 
-    -- Enable NUI cursor focus for the dialog
+    -- Exclusive NUI keyboard focus: no game-input leak into other resources' keybinds
     SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(false)
 
     SendNUIMessage({
         action = 'openInputDialog',
@@ -742,11 +766,13 @@ local function InputDialog(title, fields)
     local result = Citizen.Await(inputDialogPromise)
     inputDialogPromise = nil
 
-    -- Restore focus: if menu is open keep cursor, otherwise release
+    -- Restore focus: if menu is open restore its cursor/keepInput state, otherwise release
     if isMenuOpen then
         SetNuiFocus(true, menuHasCursor)
+        SetNuiFocusKeepInput(menuAllowMove)
     else
         SetNuiFocus(false, false)
+        SetNuiFocusKeepInput(false)
     end
 
     return result
@@ -780,8 +806,9 @@ local function AlertDialog(data)
 
     alertDialogPromise = promise.new()
 
-    -- Enable NUI cursor focus for the dialog
+    -- Exclusive NUI keyboard focus: no game-input leak into other resources' keybinds
     SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(false)
 
     SendNUIMessage({
         action = 'openAlertDialog',
@@ -792,11 +819,13 @@ local function AlertDialog(data)
     local result = Citizen.Await(alertDialogPromise)
     alertDialogPromise = nil
 
-    -- Restore focus: if menu is open keep cursor, otherwise release
+    -- Restore focus: if menu is open restore its cursor/keepInput state, otherwise release
     if isMenuOpen then
         SetNuiFocus(true, menuHasCursor)
+        SetNuiFocusKeepInput(menuAllowMove)
     else
         SetNuiFocus(false, false)
+        SetNuiFocusKeepInput(false)
     end
 
     return result
@@ -838,7 +867,9 @@ local function Minigame(gameType, difficulty, retries)
 
     minigamePromise = promise.new()
 
+    -- Exclusive NUI keyboard focus: no game-input leak into other resources' keybinds
     SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(false)
 
     SendNUIMessage({
         action = 'openMinigame',
@@ -854,8 +885,10 @@ local function Minigame(gameType, difficulty, retries)
 
     if isMenuOpen then
         SetNuiFocus(true, menuHasCursor)
+        SetNuiFocusKeepInput(menuAllowMove)
     else
         SetNuiFocus(false, false)
+        SetNuiFocusKeepInput(false)
     end
 
     return result == true

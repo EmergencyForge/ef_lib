@@ -21,6 +21,18 @@ Config.AccentColor = '#3b82f6'
 -- Demo-Menü aktivieren (in Produktion auf false setzen)
 Config.EnableDemo = true
 
+-- Maus-Cursor in Menüs anzeigen (globaler Standard)
+-- true = Maus + Tastatur (Cursor sichtbar, Items klickbar)
+-- false = Nur Tastatur (kein Cursor, Spieler behält Kamerasteuerung)
+-- Kann pro Menü überschrieben werden: OpenMenu({ showCursor = true/false })
+Config.ShowCursor = true
+
+-- Spielerbewegung während Menü erlauben (globaler Standard)
+-- true = Spieler kann sich bewegen/umsehen während Menü offen ist
+-- false = Spieler ist eingefroren während Menü offen ist
+-- Kann pro Menü überschrieben werden: OpenMenu({ allowMove = true/false })
+Config.AllowMove = true
+
 -- Taste für Demo-Menü (nur wenn EnableDemo = true)
 Config.MenuKey = 'F2'
 ```
@@ -34,6 +46,44 @@ Config.MenuKey = 'F2'
 | Lila | `#a855f7` |
 | Orange | `#f97316` |
 | Gelb | `#eab308` |
+
+### Cursor-Steuerung (`Config.ShowCursor`)
+
+| Wert | Steuerung | Beschreibung |
+|------|-----------|-------------|
+| `true` | Maus + Tastatur | Cursor sichtbar, Items klickbar. Standard-Verhalten. |
+| `false` | Nur Tastatur | Kein Cursor, Spieler behält Kamerasteuerung (z.B. für Kleidung/Wardrobe-Menüs). |
+
+Dies ist der **globale Standard** für alle Menüs. Einzelne Menüs können den Wert mit `showCursor` überschreiben:
+
+```lua
+-- Globaler Standard aus Config.ShowCursor wird verwendet
+exports.ef_lib:OpenMenu({ title = 'Normal', items = { ... } })
+
+-- Überschreibt den globalen Standard für dieses Menü
+exports.ef_lib:OpenMenu({ title = 'Wardrobe', showCursor = false, items = { ... } })
+```
+
+**Priorität:** `menuData.showCursor` (wenn gesetzt) > `Config.ShowCursor` > `true` (Fallback)
+
+### Bewegungssteuerung (`Config.AllowMove`)
+
+| Wert | Verhalten | Beschreibung |
+|------|-----------|-------------|
+| `true` | Bewegung erlaubt | Spieler kann sich bewegen und umsehen während Menü offen ist. |
+| `false` | Bewegung gesperrt | Spieler ist eingefroren während Menü offen ist (klassisches UI-Verhalten). |
+
+Einzelne Menüs können den Wert mit `allowMove` überschreiben:
+
+```lua
+-- Spieler kann sich bewegen
+exports.ef_lib:OpenMenu({ title = 'Wardrobe', allowMove = true, items = { ... } })
+
+-- Spieler ist eingefroren
+exports.ef_lib:OpenMenu({ title = 'Shop', allowMove = false, items = { ... } })
+```
+
+**Priorität:** `menuData.allowMove` (wenn gesetzt) > `Config.AllowMove` > `true` (Fallback)
 
 ---
 
@@ -137,7 +187,8 @@ exports.ef_lib:OpenMenu({
 |-----------|-----|----------|-------------|
 | `title` | string | — | Titel des Menüs |
 | `items` | table | — | Array von Menu Items |
-| `showCursor` | boolean | `true` | Maus-Cursor anzeigen. Auf `false` setzen für Menüs die Kamerasteuerung brauchen (z.B. Kleidung/Wardrobe) |
+| `showCursor` | boolean | `Config.ShowCursor` | Maus-Cursor anzeigen. Überschreibt den globalen `Config.ShowCursor` Wert. Auf `false` setzen für Menüs die Kamerasteuerung brauchen (z.B. Kleidung/Wardrobe) |
+| `allowMove` | boolean | `Config.AllowMove` | Spielerbewegung erlauben. Überschreibt den globalen `Config.AllowMove` Wert. Auf `false` setzen um den Spieler einzufrieren. |
 
 **Hinweis:** Bei `showCursor = false` behält der Spieler die Maus-/Kamerasteuerung. Navigation erfolgt über Tastatur (Pfeiltasten / WASD).
 

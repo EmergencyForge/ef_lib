@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick, computed } from 'vue'
-import { useMinigameStore, DIFFICULTY_LABELS, type Difficulty } from '@/stores/minigame'
+import { useMinigameStore, type Difficulty } from '@/stores/minigame'
 import { fetchNui } from '@/composables/useNui'
 
 const store = useMinigameStore()
@@ -493,7 +493,6 @@ function loop(ts: number) {
 
     // Type-specific updates
     if (store.gameType === 'lockpick') {
-      const cfg = LOCKPICK_CFG[store.difficulty]
       lpPins.value.forEach(pin => {
         if (pin.locked || pin.failed) return
         pin.y += pin.direction * pin.speed * 120 * dt
