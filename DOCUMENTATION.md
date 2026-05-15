@@ -1090,5 +1090,5 @@ local success = exports.ef_lib:RequestAnimDict('mini@repair', 5000)
 ### Hint Position setzen
 
 ```lua
-exports.ef_lib:SetHintPosition('bottom-center')  -- Standard-Position
+exports.ef_lib:SetHintPosition('bottom-left')  -- Standard-Position
 ```

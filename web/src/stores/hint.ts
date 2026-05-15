@@ -12,10 +12,10 @@ export interface HintData {
 
 export const useHintStore = defineStore('hint', () => {
   const hints = ref<HintData[]>([])
-  const position = ref<HintPosition>('bottom-center')
+  const position = ref<HintPosition>('bottom-left')
 
   function setPosition(pos: HintPosition) {
-    position.value = pos || 'bottom-center'
+    position.value = pos || 'bottom-left'
   }
 
   function showHint(data: HintData) {
@@ -35,7 +35,7 @@ export const useHintStore = defineStore('hint', () => {
 
   function hideAllHints() {
     hints.value = []
-    position.value = 'bottom-center'
+    position.value = 'bottom-left'
   }
 
   return {

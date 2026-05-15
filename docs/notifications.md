@@ -137,11 +137,12 @@ TriggerClientEvent('ef_lib:notify', -1, 'info', 'Titel', 'Nachricht', 5000)
 ## UI-Verhalten
 
 - Notifications werden mit einer **Slide-In-Animation** angezeigt (von der jeweiligen Seite)
-- Jede Notification hat eine **Timer-Leiste** am unteren Rand, die die verbleibende Anzeigezeit visualisiert
-- Notifications können manuell über den **Schließen-Button** (✕) entfernt werden
-- Mehrere Notifications werden untereinander gestapelt mit einem Abstand von `10px`
-- Breite: mindestens `300px`, maximal `380px`
-- Bei `duration: 0` bleibt die Notification dauerhaft sichtbar, bis sie manuell geschlossen wird
+- Jede Notification hat eine **Timer-Leiste** am unteren Rand mit dezentem Glow nach oben in der Typ-Farbe — visualisiert die verbleibende Anzeigezeit
+- Notifications schließen sich automatisch nach Ablauf der `duration` und können nicht manuell weggeklickt werden (da Standardmäßig kein Cursor aktiv ist)
+- Mehrere Notifications werden untereinander gestapelt mit einem Abstand von `12px`
+- Breite: mindestens `340px`, maximal `400px`
+- FontAwesome-Icons je Typ: `fa-circle-check`, `fa-circle-xmark`, `fa-triangle-exclamation`, `fa-circle-info`
+- Bei `duration: 0` bleibt die Notification dauerhaft sichtbar, bis sie programmatisch entfernt wird (siehe NotificationStore)
 
 ---
 

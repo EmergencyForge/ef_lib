@@ -7,11 +7,11 @@ const settingsStore = useSettingsStore()
 
 function getIcon(type: Notification['type']): string {
   switch (type) {
-    case 'success': return '✓'
-    case 'error': return '✕'
-    case 'warning': return '!'
-    case 'info': return 'i'
-    default: return 'i'
+    case 'success': return 'fa-solid fa-circle-check'
+    case 'error':   return 'fa-solid fa-circle-xmark'
+    case 'warning': return 'fa-solid fa-triangle-exclamation'
+    case 'info':    return 'fa-solid fa-circle-info'
+    default:        return 'fa-solid fa-circle-info'
   }
 }
 </script>
@@ -25,10 +25,9 @@ function getIcon(type: Notification['type']): string {
         class="notification"
         :class="notification.type"
       >
-        <div class="notification-accent"></div>
         <div class="notification-body">
           <div class="notification-icon">
-            {{ getIcon(notification.type) }}
+            <i :class="getIcon(notification.type)"></i>
           </div>
           <div class="notification-content">
             <div class="notification-title">{{ notification.title }}</div>
@@ -36,15 +35,6 @@ function getIcon(type: Notification['type']): string {
               {{ notification.message }}
             </div>
           </div>
-          <button
-            class="notification-close"
-            @click="notificationStore.removeNotification(notification.id)"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
         </div>
         <div class="notification-timer">
           <div class="notification-timer-bar" :style="{ animationDuration: `${notification.duration}ms` }"></div>
@@ -59,100 +49,108 @@ function getIcon(type: Notification['type']): string {
   position: fixed;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   z-index: 9999;
   pointer-events: none;
 }
 
 /* Position variants */
 .notifications-container.position-top-right {
-  top: 20px;
-  right: 20px;
+  top: 24px;
+  right: 24px;
 }
 
 .notifications-container.position-top-left {
-  top: 20px;
-  left: 20px;
+  top: 24px;
+  left: 24px;
 }
 
 .notifications-container.position-bottom-right {
-  bottom: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   flex-direction: column-reverse;
 }
 
 .notifications-container.position-bottom-left {
-  bottom: 20px;
-  left: 20px;
+  bottom: 24px;
+  left: 24px;
   flex-direction: column-reverse;
 }
 
 .notification {
   position: relative;
-  min-width: 300px;
-  max-width: 380px;
-  border-radius: 10px;
+  min-width: 340px;
+  max-width: 400px;
+  border-radius: 5px;
   overflow: hidden;
   pointer-events: auto;
-  background: rgb(18, 18, 22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.5),
-    0 1px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(180deg, rgb(24, 24, 28) 0%, rgb(18, 18, 22) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  isolation: isolate;
 }
 
-/* Colored accent bar on the left */
-.notification-accent {
+/* Soft top highlight per type */
+.notification::before {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 100%;
+  inset: 0 0 auto 0;
+  height: 1px;
+  pointer-events: none;
 }
 
-.notification.success .notification-accent { background: #22c55e; }
-.notification.error .notification-accent { background: #ef4444; }
-.notification.warning .notification-accent { background: #f59e0b; }
-.notification.info .notification-accent { background: #3b82f6; }
+.notification.success::before { background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent); }
+.notification.error::before   { background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.2), transparent); }
+.notification.warning::before { background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), transparent); }
+.notification.info::before    { background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent); }
 
 .notification-body {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px 16px 12px 18px;
+  padding: 14px 14px 14px 18px;
 }
 
 .notification-icon {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border-radius: 4px;
+  font-size: 0.95rem;
   flex-shrink: 0;
   margin-top: 1px;
+  line-height: 1;
+}
+
+.notification-icon i {
+  display: block;
+  line-height: 1;
 }
 
 .notification.success .notification-icon {
-  background: rgba(34, 197, 94, 0.15);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(34, 197, 94, 0.08));
   color: #4ade80;
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.25);
 }
 
 .notification.error .notification-icon {
-  background: rgba(239, 68, 68, 0.15);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.22), rgba(239, 68, 68, 0.08));
   color: #f87171;
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.25);
 }
 
 .notification.warning .notification-icon {
-  background: rgba(245, 158, 11, 0.15);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(245, 158, 11, 0.08));
   color: #fbbf24;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.25);
 }
 
 .notification.info .notification-icon {
-  background: rgba(59, 130, 246, 0.15);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.22), rgba(59, 130, 246, 0.08));
   color: #60a5fa;
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.25);
 }
 
 .notification-content {
@@ -163,53 +161,57 @@ function getIcon(type: Notification['type']): string {
 .notification-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #f0f0f0;
-  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 .notification-message {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.55);
-  line-height: 1.45;
-  margin-top: 3px;
-}
-
-.notification-close {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.25);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.notification-close:hover {
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+  margin-top: 4px;
+  letter-spacing: 0.005em;
 }
 
 /* Timer bar at bottom */
 .notification-timer {
+  position: relative;
   height: 2px;
   background: rgba(255, 255, 255, 0.04);
+  overflow: visible;
 }
 
 .notification-timer-bar {
+  position: relative;
   height: 100%;
   width: 100%;
   animation: timer-shrink 5s linear forwards;
+  border-radius: 1px;
 }
 
-.notification.success .notification-timer-bar { background: rgba(34, 197, 94, 0.5); }
-.notification.error .notification-timer-bar { background: rgba(239, 68, 68, 0.5); }
-.notification.warning .notification-timer-bar { background: rgba(245, 158, 11, 0.5); }
-.notification.info .notification-timer-bar { background: rgba(59, 130, 246, 0.5); }
+/* Upward glow halo on the timer bar */
+.notification-timer-bar::before {
+  content: '';
+  position: absolute;
+  inset: -3px 0 0 0;
+  height: 4px;
+  filter: blur(4px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.notification.success .notification-timer-bar         { background: linear-gradient(90deg, rgba(34, 197, 94, 0.7), rgba(74, 222, 128, 0.8)); }
+.notification.success .notification-timer-bar::before { background: rgba(34, 197, 94, 0.5); }
+
+.notification.error .notification-timer-bar           { background: linear-gradient(90deg, rgba(239, 68, 68, 0.7), rgba(248, 113, 113, 0.8)); }
+.notification.error .notification-timer-bar::before   { background: rgba(239, 68, 68, 0.5); }
+
+.notification.warning .notification-timer-bar         { background: linear-gradient(90deg, rgba(245, 158, 11, 0.7), rgba(251, 191, 36, 0.8)); }
+.notification.warning .notification-timer-bar::before { background: rgba(245, 158, 11, 0.5); }
+
+.notification.info .notification-timer-bar            { background: linear-gradient(90deg, rgba(59, 130, 246, 0.7), rgba(96, 165, 250, 0.8)); }
+.notification.info .notification-timer-bar::before    { background: rgba(59, 130, 246, 0.5); }
 
 @keyframes timer-shrink {
   from { width: 100%; }

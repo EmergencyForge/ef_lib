@@ -106,43 +106,53 @@ const isHorizontal = computed(() =>
 .hint-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 18px 10px 10px;
-  background: rgb(18, 18, 22);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
 }
 
 .hint-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 34px;
-  height: 34px;
-  padding: 0 10px;
-  background: rgba(var(--accent-rgb), 0.15);
-  border: 1px solid rgba(var(--accent-rgb), 0.3);
-  border-radius: 7px;
-  color: var(--accent-color);
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #ffffff;
 }
 
 .hint-key {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
 }
 
 .hint-icon {
-  font-size: 16px;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--accent-color);
+}
+
+.hint-icon i {
+  display: block;
+  line-height: 1;
 }
 
 .hint-label {
   font-size: 14px;
-  font-weight: 500;
-  color: #f0f0f0;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.005em;
   white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 1px rgba(0, 0, 0, 0.9);
 }
 
 /* ─── Container Transitions ─── */

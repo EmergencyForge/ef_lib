@@ -34,6 +34,11 @@ const cancelLabel = computed(() => {
   return key
 })
 
+const remainingSeconds = computed(() => {
+  const ms = Math.max(0, (1 - store.progress) * store.duration)
+  return (ms / 1000).toFixed(1)
+})
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown, true)
 })
@@ -47,7 +52,7 @@ onUnmounted(() => {
   <Transition name="progress">
     <div v-if="store.visible" class="progress-container">
       <div class="progress-card">
-        <!-- Header: Icon + Label + Percent -->
+        <!-- Header: Icon + Label + Time + Percent -->
         <div class="progress-header">
           <div class="progress-info">
             <div v-if="store.icon" class="progress-icon">
@@ -55,7 +60,7 @@ onUnmounted(() => {
             </div>
             <span class="progress-label">{{ store.label }}</span>
           </div>
-          <span class="progress-percent">{{ store.progressPercent }}%</span>
+          <span class="progress-time">{{ remainingSeconds }}s</span>
         </div>
 
         <!-- Bar -->
@@ -91,15 +96,15 @@ onUnmounted(() => {
 }
 
 .progress-card {
-  width: 320px;
-  padding: 16px 20px;
-  background: rgb(18, 18, 22);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  width: 380px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
 }
 
 /* ─── Header ─── */
@@ -122,32 +127,38 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: rgba(var(--accent-rgb), 0.12);
-  border: 1px solid rgba(var(--accent-rgb), 0.25);
-  border-radius: 8px;
+  width: 24px;
+  height: 24px;
   color: var(--accent-color);
-  font-size: 13px;
+  font-size: 15px;
+  line-height: 1;
   flex-shrink: 0;
+}
+
+.progress-icon i {
+  display: block;
+  line-height: 1;
 }
 
 .progress-label {
   font-size: 14px;
-  font-weight: 500;
-  color: #f0f0f0;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 1px rgba(0, 0, 0, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.progress-percent {
+.progress-time {
   font-size: 13px;
   font-weight: 600;
   color: var(--accent-color);
-  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
   margin-left: 12px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
 /* ─── Track & Fill ─── */
@@ -155,10 +166,11 @@ onUnmounted(() => {
 .progress-track {
   position: relative;
   width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 3px;
-  overflow: hidden;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: visible;
 }
 
 .progress-fill {
@@ -167,22 +179,12 @@ onUnmounted(() => {
   left: 0;
   height: 100%;
   background: var(--accent-color);
-  border-radius: 3px;
+  border-radius: 2px;
   transition: width 0.06s linear;
 }
 
 .progress-glow {
-  position: absolute;
-  top: -4px;
-  width: 14px;
-  height: 14px;
-  background: var(--accent-color);
-  border-radius: 50%;
-  filter: blur(8px);
-  opacity: 0.5;
-  transform: translateX(-50%);
-  transition: left 0.06s linear;
-  pointer-events: none;
+  display: none;
 }
 
 /* ─── Cancel Hint ─── */
@@ -200,23 +202,26 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 22px;
+  min-width: 22px;
+  height: 20px;
   padding: 0 6px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
 }
 
 .cancel-text {
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.35);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.005em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
 .progress-cancel:hover .cancel-key {
