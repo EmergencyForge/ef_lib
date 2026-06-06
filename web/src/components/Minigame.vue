@@ -150,6 +150,19 @@ function endGame(success: boolean) {
   }, 1400)
 }
 
+// Only end-on-overlay-click when both mousedown and mouseup happen on the
+// overlay itself, so a drag started inside the minigame doesn't fail it.
+let overlayMouseDown = false
+
+function onOverlayMouseDown(e: MouseEvent) {
+  overlayMouseDown = e.target === e.currentTarget
+}
+
+function onOverlayClick(e: MouseEvent) {
+  if (overlayMouseDown && e.target === e.currentTarget) endGame(false)
+  overlayMouseDown = false
+}
+
 function flashContainer() {
   const el = document.querySelector('.mg-container') as HTMLElement
   if (!el) return
@@ -606,7 +619,7 @@ onUnmounted(() => {
 
 <template>
   <Transition name="mg">
-    <div v-if="store.visible" class="mg-overlay" @click.self="endGame(false)">
+    <div v-if="store.visible" class="mg-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
       <div class="mg-container">
 
         <!-- ── HEADER ── -->

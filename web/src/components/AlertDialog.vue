@@ -15,6 +15,19 @@ function cancel() {
   fetchNui('alertDialogResult', { result: 'cancel' })
 }
 
+// Only cancel when both mousedown and mouseup happen on the overlay itself,
+// so dragging a text selection out of the modal doesn't close it.
+let overlayMouseDown = false
+
+function onOverlayMouseDown(e: MouseEvent) {
+  overlayMouseDown = e.target === e.currentTarget
+}
+
+function onOverlayClick(e: MouseEvent) {
+  if (overlayMouseDown && e.target === e.currentTarget) cancel()
+  overlayMouseDown = false
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   if (!dialogStore.alertDialogVisible) return
 
@@ -40,15 +53,11 @@ onUnmounted(() => {
 
 <template>
   <Transition name="alert">
-    <div v-if="dialogStore.alertDialogVisible" class="alert-overlay" @click.self="cancel">
+    <div v-if="dialogStore.alertDialogVisible" class="alert-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
       <div class="alert-modal" :class="{ centered: dialogStore.alertDialogData.centered }">
         <!-- Icon -->
         <div class="alert-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
+          <i class="fa-solid fa-circle-exclamation"></i>
         </div>
 
         <!-- Header -->
@@ -84,7 +93,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,15 +101,16 @@ onUnmounted(() => {
 }
 
 .alert-modal {
-  width: 380px;
-  background: rgba(20, 20, 20, 0.95);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-  padding: 28px 24px;
+  width: 400px;
+  background: linear-gradient(180deg, rgb(24, 24, 28) 0%, rgb(18, 18, 22) 100%);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 22px 22px 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  isolation: isolate;
 }
 
 .alert-modal.centered {
@@ -110,29 +120,38 @@ onUnmounted(() => {
 
 /* Icon */
 .alert-icon {
-  width: 52px;
-  height: 52px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(var(--accent-rgb), 0.12);
-  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22), rgba(var(--accent-rgb), 0.08));
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.25);
+  border-radius: 4px;
   color: var(--accent-color);
-  margin-bottom: 4px;
+  font-size: 14px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.alert-icon i {
+  display: block;
+  line-height: 1;
 }
 
 /* Header */
 .alert-header {
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 /* Content */
 .alert-content {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
   line-height: 1.5;
   margin: 0;
 }
@@ -140,8 +159,8 @@ onUnmounted(() => {
 /* Buttons */
 .alert-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 10px;
   width: 100%;
 }
 
@@ -150,24 +169,26 @@ onUnmounted(() => {
 }
 
 .btn {
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   border: none;
-  transition: all 0.15s ease;
+  letter-spacing: 0.005em;
+  transition: background-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
   flex: 1;
 }
 
 .btn-cancel {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
@@ -177,7 +198,7 @@ onUnmounted(() => {
 }
 
 .btn-confirm:hover {
-  filter: brightness(1.15);
+  filter: brightness(1.12);
 }
 
 /* ─── Transitions ─── */

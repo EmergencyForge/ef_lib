@@ -61,6 +61,19 @@ function cancel() {
   fetchNui('inputDialogResult', { values: null })
 }
 
+// Only cancel when both mousedown and mouseup happen on the overlay itself,
+// so dragging a text selection out of the modal doesn't close it.
+let overlayMouseDown = false
+
+function onOverlayMouseDown(e: MouseEvent) {
+  overlayMouseDown = e.target === e.currentTarget
+}
+
+function onOverlayClick(e: MouseEvent) {
+  if (overlayMouseDown && e.target === e.currentTarget) cancel()
+  overlayMouseDown = false
+}
+
 function handleKeyDown(event: KeyboardEvent) {
   if (!dialogStore.inputDialogVisible) return
 
@@ -87,16 +100,13 @@ onUnmounted(() => {
 
 <template>
   <Transition name="dialog">
-    <div v-if="dialogStore.inputDialogVisible" class="dialog-overlay" ref="containerRef" @click.self="cancel">
+    <div v-if="dialogStore.inputDialogVisible" class="dialog-overlay" ref="containerRef" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
       <div class="dialog-modal">
         <!-- Header -->
         <div class="dialog-header">
           <h2 class="dialog-title">{{ dialogStore.inputDialogTitle }}</h2>
-          <button class="dialog-close" @click="cancel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+          <button class="dialog-close" @click="cancel" aria-label="Close">
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
@@ -157,9 +167,7 @@ onUnmounted(() => {
               @click="onCheckboxToggle(index)"
             >
               <div class="checkbox-box" :class="{ checked: dialogStore.inputDialogValues[index] }">
-                <svg v-if="dialogStore.inputDialogValues[index]" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <i v-if="dialogStore.inputDialogValues[index]" class="fa-solid fa-check"></i>
               </div>
               <span class="checkbox-label">{{ dialogStore.inputDialogValues[index] ? 'Aktiviert' : 'Deaktiviert' }}</span>
             </div>
@@ -214,7 +222,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,48 +230,57 @@ onUnmounted(() => {
 }
 
 .dialog-modal {
-  width: 440px;
+  width: 460px;
   max-height: 80vh;
-  background: rgba(20, 20, 20, 0.95);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(180deg, rgb(24, 24, 28) 0%, rgb(18, 18, 22) 100%);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .dialog-title {
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 .dialog-close {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
   border: none;
-  border-radius: 6px;
-  padding: 6px;
+  border-radius: 4px;
+  padding: 6px 8px;
   color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dialog-close i {
+  display: block;
+  line-height: 1;
 }
 
 .dialog-close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* ─── Fields ─── */
@@ -304,15 +321,15 @@ onUnmounted(() => {
 .field-input,
 .field-textarea {
   width: 100%;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  padding: 9px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .field-input:focus,
@@ -347,14 +364,14 @@ onUnmounted(() => {
 }
 
 .checkbox-box {
-  width: 22px;
-  height: 22px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   flex-shrink: 0;
 }
 
@@ -363,8 +380,10 @@ onUnmounted(() => {
   border-color: var(--accent-color);
 }
 
-.checkbox-box svg {
+.checkbox-box i {
   color: #ffffff;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .checkbox-label {
@@ -375,12 +394,12 @@ onUnmounted(() => {
 /* Select */
 .field-select {
   width: 100%;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  padding: 9px 12px;
+  background-color: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-family: inherit;
   outline: none;
   appearance: none;
@@ -446,12 +465,14 @@ onUnmounted(() => {
 .slider-value {
   min-width: 40px;
   text-align: center;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--accent-color);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 4px 8px;
-  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ─── Footer ─── */
@@ -459,30 +480,32 @@ onUnmounted(() => {
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 16px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(0, 0, 0, 0.2);
 }
 
 .btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
   border: none;
-  transition: all 0.15s ease;
+  letter-spacing: 0.005em;
+  transition: background-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
 }
 
 .btn-cancel {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
 }
 
@@ -492,7 +515,7 @@ onUnmounted(() => {
 }
 
 .btn-confirm:hover {
-  filter: brightness(1.15);
+  filter: brightness(1.12);
 }
 
 /* ─── Transitions ─── */
