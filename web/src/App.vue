@@ -7,6 +7,7 @@ import InputDialog from '@/components/InputDialog.vue'
 import AlertDialog from '@/components/AlertDialog.vue'
 import Minigame from '@/components/Minigame.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import RadialMenu from '@/components/RadialMenu.vue'
 import { useMenuStore } from '@/stores/menu'
 import { useNotificationStore } from '@/stores/notification'
 import { useSettingsStore } from '@/stores/settings'
@@ -211,6 +212,7 @@ onMounted(() => {
     <AlertDialog />
     <Minigame />
     <ProgressBar />
+    <RadialMenu />
   </div>
 </template>
 

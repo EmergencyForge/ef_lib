@@ -1114,6 +1114,67 @@ local function CancelProgressBar()
 end
 
 -----------------------
+-- Radial Menu System
+-----------------------
+
+local radialCallback = nil
+local radialOpen = false
+
+--- Open a radial wheel for quick actions. Hold-to-trigger pattern:
+--- call OpenRadial(...) on key-down, CloseRadial() on key-up — the
+--- onSelect callback fires with the id of the item the cursor was on
+--- when the key was released (or with nil if no slice was active).
+--- @param data table { items: { id, label, icon? }[], onSelect: function(id) }
+local function OpenRadial(data)
+    if radialOpen then return end
+    if type(data) ~= 'table' or type(data.items) ~= 'table' or #data.items == 0 then
+        print('^1[EF_LIB] OpenRadial: data.items must be a non-empty table^0')
+        return
+    end
+
+    radialCallback = data.onSelect
+    radialOpen = true
+
+    SetNuiFocus(true, true)
+    SetNuiFocusKeepInput(true)
+    SendNUIMessage({
+        action = 'openRadial',
+        data = { items = data.items }
+    })
+end
+
+--- Close the active radial. The NUI side immediately sends back the
+--- currently hovered item id via the radialResult callback, which then
+--- invokes the onSelect from OpenRadial.
+local function CloseRadial()
+    if not radialOpen then return end
+    radialOpen = false
+
+    SendNUIMessage({ action = 'closeRadial' })
+    SetNuiFocusKeepInput(false)
+    SetNuiFocus(false, false)
+end
+
+-- NUI Callback: receives the selected item id when the radial closes
+RegisterNUICallback('radialResult', function(data, cb)
+    local cbFn = radialCallback
+    radialCallback = nil
+
+    -- NUI closed itself (left-click on an end-item) → reset state and free focus
+    if data.selfClosed then
+        radialOpen = false
+        SetNuiFocusKeepInput(false)
+        SetNuiFocus(false, false)
+    end
+
+    if cbFn and data.id then
+        local ok, err = pcall(cbFn, data.id)
+        if not ok then print('^1[EF_LIB] Radial onSelect error: ' .. tostring(err) .. '^0') end
+    end
+    cb('ok')
+end)
+
+-----------------------
 -- Exports
 -----------------------
 
@@ -1169,6 +1230,10 @@ exports('ContextMenu', ContextMenu)
 -- Zone System
 exports('CreateSphereZone', CreateSphereZone)
 exports('CreateBoxZone', CreateBoxZone)
+
+-- Radial Menu
+exports('OpenRadial', OpenRadial)
+exports('CloseRadial', CloseRadial)
 
 -- Utilities
 exports('RequestModel', RequestModel)

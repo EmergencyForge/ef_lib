@@ -1092,3 +1092,84 @@ local success = exports.ef_lib:RequestAnimDict('mini@repair', 5000)
 ```lua
 exports.ef_lib:SetHintPosition('bottom-left')  -- Standard-Position
 ```
+
+---
+
+## Radial Menu (Schnellaktionen)
+
+Hold-to-trigger Radial-Wheel im Stil eines Weapon-Wheels. Eine Taste halten öffnet das Wheel, die Maus-Richtung vom Bildschirmcenter aus bestimmt den aktiven Slice. Loslassen feuert die Aktion. Optional kann auch per Linksklick bestätigt und in Submenüs navigiert werden.
+
+### Exports
+
+```lua
+exports.ef_lib:OpenRadial(data)   -- öffnet das Radial (nicht-blockierend)
+exports.ef_lib:CloseRadial()      -- schließt das Radial, löst onSelect aus
+```
+
+### Datenstruktur
+
+| Feld | Typ | Beschreibung |
+|---|---|---|
+| `items` | table | Liste der Slices (max. 8 pro Ebene) |
+| `onSelect` | function(id) | Callback, der mit der ID des gewählten Items aufgerufen wird |
+
+Jedes Item:
+
+| Feld | Typ | Beschreibung |
+|---|---|---|
+| `id` | string | Eindeutige ID (bei Submenüs empfohlen: `parent:child` Konvention) |
+| `label` | string | Anzeigetext unter dem Icon |
+| `icon` | string (optional) | FontAwesome-Icon (z.B. `'fa-phone'`, `'fa-solid fa-key'`) |
+| `submenu` | table (optional) | Verschachtelte Items — verwandelt den Slice zu einem Drill-Down |
+
+### Verhalten
+
+- **Maus-Richtung** vom Bildschirmcenter aus bestimmt den aktiven Slice
+- **Dead-Zone** im Zentrum (innerer Kreis) → kein Slice aktiv
+- **Hold-Taste loslassen** → `onSelect(id)` wird mit dem aktiven Item aufgerufen. Ohne aktiven Slice (Dead-Zone): kein Callback (Abbruch)
+- **Linksklick auf End-Item** → triggert die Aktion sofort, schließt das Radial
+- **Linksklick auf Submenu-Item** → öffnet das Submenü (Drill-Down)
+- **Linksklick im Zentrum** (im Submenü) → eine Ebene zurück
+- **Submenu-Indikator**: drei kleine Punkte (`fa-ellipsis`) unter dem Label
+
+### Typisches Setup
+
+```lua
+RegisterCommand('+quick_actions', function()
+    exports.ef_lib:OpenRadial({
+        items = {
+            { id = 'phone', label = 'Telefon', icon = 'fa-phone' },
+            {
+                id = 'vehicle', label = 'Fahrzeug', icon = 'fa-car',
+                submenu = {
+                    { id = 'vehicle:light',  label = 'Licht',     icon = 'fa-lightbulb' },
+                    { id = 'vehicle:engine', label = 'Motor',     icon = 'fa-key' },
+                    { id = 'vehicle:trunk',  label = 'Kofferraum',icon = 'fa-car-rear' },
+                }
+            },
+            { id = 'inventory', label = 'Inventar', icon = 'fa-box' },
+        },
+        onSelect = function(id)
+            if id == 'phone' then TriggerEvent('phone:open')
+            elseif id == 'vehicle:light' then TriggerEvent('vehicle:toggleLights')
+            elseif id == 'vehicle:engine' then TriggerEvent('vehicle:toggleEngine')
+            elseif id == 'vehicle:trunk' then TriggerEvent('vehicle:openTrunk')
+            elseif id == 'inventory' then TriggerEvent('inventory:open')
+            end
+        end
+    })
+end, false)
+
+RegisterCommand('-quick_actions', function()
+    exports.ef_lib:CloseRadial()
+end, false)
+
+RegisterKeyMapping('+quick_actions', 'Schnellaktionen-Wheel', 'keyboard', 'Z')
+```
+
+### Hinweise
+
+- Maximal **8 Items pro Ebene** — überschüssige Items werden abgeschnitten. Wenn mehr Aktionen benötigt werden, gruppiere sie in Submenüs.
+- Submenüs sind **beliebig tief** verschachtelbar.
+- Das Radial gibt **Tastatur-Inputs** durch (`SetNuiFocusKeepInput(true)`) — der Spieler kann sich während des offenen Wheels weiterbewegen. Maus geht an die UI.
+- Beim Klick-Selfclose ist der NUI-Focus sauber freigegeben — der Lua-`CloseRadial()`-Call ist dann ein No-Op.
