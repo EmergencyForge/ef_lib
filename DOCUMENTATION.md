@@ -567,6 +567,11 @@ exports.ef_lib:CreateBoxZone(data)                   -- Box Zone erstellen → z
 -- Utilities
 exports.ef_lib:RequestModel(model, timeout)          -- Model laden → boolean
 exports.ef_lib:RequestAnimDict(dict, timeout)        -- AnimDict laden → boolean
+
+-- Geo Helpers
+exports.ef_lib:GetClosestPlayer(coords, radius)                  -- → id, ped, coords
+exports.ef_lib:GetNearbyPlayers(coords, radius, includeSelf)     -- → table[]
+exports.ef_lib:GetClosestVehicle(coords, radius, includeSelf)    -- → vehicle, coords
 ```
 
 **Server:**
@@ -1091,6 +1096,74 @@ local success = exports.ef_lib:RequestAnimDict('mini@repair', 5000)
 
 ```lua
 exports.ef_lib:SetHintPosition('bottom-left')  -- Standard-Position
+```
+
+---
+
+## Geo Helpers (Client)
+
+Drop-in-Ersatz für ox_lib-Geo-Natives. Alle Funktionen sind client-seitig und arbeiten mit `vector3`-Koordinaten und Metern als Radius.
+
+### `GetClosestPlayer(coords, radius)`
+
+Findet den **nächstgelegenen Spieler** (außer dem eigenen) innerhalb des Radius.
+
+**Parameter:**
+
+| Name | Typ | Beschreibung |
+|---|---|---|
+| `coords` | vector3 | Mittelpunkt der Suche |
+| `radius` | number | Maximaler Abstand in Metern |
+
+**Rückgabe:** `playerId, ped, coords` — alles `nil` wenn niemand in Reichweite.
+
+```lua
+local pid, ped, pcoords = exports.ef_lib:GetClosestPlayer(GetEntityCoords(PlayerPedId()), 5.0)
+if pid then
+    print(('Nächster Spieler: %s, Abstand: %.2fm'):format(GetPlayerName(pid), #(pcoords - GetEntityCoords(PlayerPedId()))))
+end
+```
+
+### `GetNearbyPlayers(coords, radius, includeSelf)`
+
+Liefert **alle Spieler im Radius** als sortiertes Array (nach Abstand aufsteigend).
+
+**Parameter:**
+
+| Name | Typ | Beschreibung |
+|---|---|---|
+| `coords` | vector3 | Mittelpunkt |
+| `radius` | number | Maximaler Abstand in Metern |
+| `includeSelf` | boolean? | Eigenen Spieler einschließen (default: `false`) |
+
+**Rückgabe:** `table[]` mit Einträgen `{ id, ped, coords, distance }`.
+
+```lua
+local nearby = exports.ef_lib:GetNearbyPlayers(GetEntityCoords(PlayerPedId()), 10.0, false)
+for i, p in ipairs(nearby) do
+    print(('#%d: %s @ %.2fm'):format(i, GetPlayerName(p.id), p.distance))
+end
+```
+
+### `GetClosestVehicle(coords, radius, includeSelf)`
+
+Findet das **nächstgelegene Fahrzeug** im Radius. Nutzt intern `GetGamePool('CVehicle')`.
+
+**Parameter:**
+
+| Name | Typ | Beschreibung |
+|---|---|---|
+| `coords` | vector3 | Mittelpunkt |
+| `radius` | number | Maximaler Abstand in Metern |
+| `includeSelf` | boolean? | Eigenes Fahrzeug einschließen (default: `false`) |
+
+**Rückgabe:** `vehicle, coords` — beide `nil` wenn keins in Reichweite.
+
+```lua
+local veh, vcoords = exports.ef_lib:GetClosestVehicle(GetEntityCoords(PlayerPedId()), 8.0, false)
+if veh then
+    print(('Nächstes Fahrzeug: %s'):format(GetDisplayNameFromVehicleModel(GetEntityModel(veh))))
+end
 ```
 
 ---

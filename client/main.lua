@@ -298,6 +298,101 @@ local function RequestAnimDict(dict, timeout)
 end
 
 -----------------------
+-- Geo Helpers
+-----------------------
+
+--- Get the closest player to the given coords within radius
+--- @param coords vector3
+--- @param radius number
+--- @return number|nil playerId  Player ID (server-side handle), or nil if none in range
+--- @return number|nil ped       Ped entity handle
+--- @return vector3|nil coords   Coords of that ped
+local function GetClosestPlayer(coords, radius)
+    local closestId, closestPed, closestCoords
+    local closestDist = radius
+    local players = GetActivePlayers()
+    local myId = PlayerId()
+
+    for i = 1, #players do
+        local pid = players[i]
+        if pid ~= myId then
+            local ped = GetPlayerPed(pid)
+            if ped ~= 0 then
+                local pedCoords = GetEntityCoords(ped)
+                local dist = #(coords - pedCoords)
+                if dist < closestDist then
+                    closestDist = dist
+                    closestId = pid
+                    closestPed = ped
+                    closestCoords = pedCoords
+                end
+            end
+        end
+    end
+
+    return closestId, closestPed, closestCoords
+end
+
+--- Get all players within radius around coords
+--- @param coords vector3
+--- @param radius number
+--- @param includeSelf boolean?  (default: false)
+--- @return table[]  Array of { id, ped, coords, distance } sorted by distance ascending
+local function GetNearbyPlayers(coords, radius, includeSelf)
+    local result = {}
+    local players = GetActivePlayers()
+    local myId = PlayerId()
+
+    for i = 1, #players do
+        local pid = players[i]
+        if includeSelf or pid ~= myId then
+            local ped = GetPlayerPed(pid)
+            if ped ~= 0 then
+                local pedCoords = GetEntityCoords(ped)
+                local dist = #(coords - pedCoords)
+                if dist <= radius then
+                    result[#result + 1] = {
+                        id = pid,
+                        ped = ped,
+                        coords = pedCoords,
+                        distance = dist,
+                    }
+                end
+            end
+        end
+    end
+
+    table.sort(result, function(a, b) return a.distance < b.distance end)
+    return result
+end
+
+--- Get the closest vehicle to the given coords within radius
+--- @param coords vector3
+--- @param radius number
+--- @param includeSelf boolean?  (default: false) — include vehicle the local player is in
+--- @return number|nil vehicle   Vehicle entity handle
+--- @return vector3|nil coords   Coords of that vehicle
+local function GetClosestVehicle(coords, radius, includeSelf)
+    local closestVehicle, closestCoords
+    local closestDist = radius
+    local myVehicle = GetVehiclePedIsIn(PlayerPedId(), false)
+
+    for _, vehicle in ipairs(GetGamePool('CVehicle')) do
+        if includeSelf or vehicle ~= myVehicle then
+            local vehCoords = GetEntityCoords(vehicle)
+            local dist = #(coords - vehCoords)
+            if dist < closestDist then
+                closestDist = dist
+                closestVehicle = vehicle
+                closestCoords = vehCoords
+            end
+        end
+    end
+
+    return closestVehicle, closestCoords
+end
+
+-----------------------
 -- Core Menu Functions
 -----------------------
 
@@ -1234,6 +1329,11 @@ exports('CreateBoxZone', CreateBoxZone)
 -- Radial Menu
 exports('OpenRadial', OpenRadial)
 exports('CloseRadial', CloseRadial)
+
+-- Geo Helpers
+exports('GetClosestPlayer', GetClosestPlayer)
+exports('GetNearbyPlayers', GetNearbyPlayers)
+exports('GetClosestVehicle', GetClosestVehicle)
 
 -- Utilities
 exports('RequestModel', RequestModel)
