@@ -6,6 +6,8 @@ export interface RadialItem {
   label: string
   icon?: string
   submenu?: RadialItem[]
+  /** Keep the radial open after this item fires (cursor mode) */
+  keepOpen?: boolean
 }
 
 export interface RadialData {
@@ -17,11 +19,14 @@ export const useRadialStore = defineStore('radial', () => {
   const items = ref<RadialItem[]>([])
   const activeIndex = ref<number | null>(null)
   const history = ref<RadialItem[][]>([])
+  /** True after a keepOpen item has fired — hold-to-select is gone, click is the only way to fire */
+  const persistent = ref(false)
 
   function open(data: RadialData) {
     items.value = (data.items || []).slice(0, 8)
     activeIndex.value = null
     history.value = []
+    persistent.value = false
     visible.value = true
   }
 
@@ -30,10 +35,15 @@ export const useRadialStore = defineStore('radial', () => {
     items.value = []
     activeIndex.value = null
     history.value = []
+    persistent.value = false
   }
 
   function setActive(index: number | null) {
     activeIndex.value = index
+  }
+
+  function setPersistent(value: boolean) {
+    persistent.value = value
   }
 
   function drillInto(submenu: RadialItem[]) {
@@ -54,9 +64,11 @@ export const useRadialStore = defineStore('radial', () => {
     items,
     activeIndex,
     history,
+    persistent,
     open,
     close,
     setActive,
+    setPersistent,
     drillInto,
     drillBack,
   }

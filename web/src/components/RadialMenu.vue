@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRadialStore } from '@/stores/radial'
 import { useNuiEvent, fetchNui } from '@/composables/useNui'
 
 const store = useRadialStore()
+const wheelRef = ref<HTMLElement | null>(null)
 
 // ─── Geometry ───
 const VIEW = 500
@@ -81,14 +82,30 @@ const slices = computed<SliceGeom[]>(() => {
 })
 
 // ─── Mouse-to-slice mapping ───
+// Measure the actual wheel element so dead-zone size and center match the
+// rendered SVG exactly (the CSS uses min(80vmin, 600px), not the full viewport).
+interface WheelGeo { cx: number; cy: number; scale: number }
+
+function getWheelGeometry(): WheelGeo | null {
+  const el = wheelRef.value
+  if (!el) return null
+  const rect = el.getBoundingClientRect()
+  const size = Math.min(rect.width, rect.height)
+  if (size <= 0) return null
+  return {
+    cx: rect.left + rect.width / 2,
+    cy: rect.top + rect.height / 2,
+    scale: size / VIEW,
+  }
+}
+
 function isInDeadZone(e: MouseEvent): boolean {
-  const cx = window.innerWidth / 2
-  const cy = window.innerHeight / 2
-  const dx = e.clientX - cx
-  const dy = e.clientY - cy
+  const geo = getWheelGeometry()
+  if (!geo) return false
+  const dx = e.clientX - geo.cx
+  const dy = e.clientY - geo.cy
   const dist = Math.sqrt(dx * dx + dy * dy)
-  const scale = Math.min(window.innerWidth, window.innerHeight) / VIEW
-  return dist < INNER_R * scale
+  return dist < INNER_R * geo.scale
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -96,15 +113,17 @@ function onMouseMove(e: MouseEvent) {
   const n = store.items.length
   if (n === 0) return
 
-  if (isInDeadZone(e)) {
+  const geo = getWheelGeometry()
+  if (!geo) return
+
+  const dx = e.clientX - geo.cx
+  const dy = e.clientY - geo.cy
+  const dist = Math.sqrt(dx * dx + dy * dy)
+
+  if (dist < INNER_R * geo.scale) {
     store.setActive(null)
     return
   }
-
-  const cx = window.innerWidth / 2
-  const cy = window.innerHeight / 2
-  const dx = e.clientX - cx
-  const dy = e.clientY - cy
 
   // atan2: 0 = right, -PI/2 = up
   // Normalize so that "up" = 0, increasing clockwise
@@ -123,13 +142,18 @@ function onMouseMove(e: MouseEvent) {
 function onMouseDown(e: MouseEvent) {
   if (!store.visible || e.button !== 0) return
 
-  // Click in center → go back one level
+  // Click in center
   if (isInDeadZone(e)) {
     if (store.history.length > 0) {
+      // Inside a submenu → go back one level
       store.drillBack()
-      e.preventDefault()
-      e.stopPropagation()
+    } else if (store.persistent) {
+      // Top level + persistent mode → close explicitly
+      fetchNui('radialResult', { id: null, closed: true })
+      store.close()
     }
+    e.preventDefault()
+    e.stopPropagation()
     return
   }
 
@@ -143,9 +167,24 @@ function onMouseDown(e: MouseEvent) {
   if (item.submenu && item.submenu.length > 0) {
     // Click on a slice with submenu → drill in
     store.drillInto(item.submenu)
+  } else if (item.keepOpen) {
+    // Trigger but keep the radial open (cursor mode)
+    fetchNui('radialResult', { id: item.id, closed: false })
+    store.setPersistent(true)
   } else {
     // Click on an end-item → fire action and close
-    fetchNui('radialResult', { id: item.id, selfClosed: true })
+    fetchNui('radialResult', { id: item.id, closed: true })
+    store.close()
+  }
+}
+
+// ─── ESC closes from persistent mode ───
+function onKeyDown(e: KeyboardEvent) {
+  if (!store.visible) return
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    e.stopPropagation()
+    fetchNui('radialResult', { id: null, closed: true })
     store.close()
   }
 }
@@ -155,28 +194,43 @@ useNuiEvent('openRadial', (data: { items: any[] }) => {
   store.open(data)
 })
 
+// Lua-triggered close (key released). Decide here whether to actually close
+// or to enter persistent mode based on the active item's keepOpen flag.
 useNuiEvent('closeRadial', () => {
+  // Already in persistent mode? Ignore — only ESC / center-click closes.
+  if (store.persistent) return
+
   const idx = store.activeIndex
   const selected = idx !== null ? store.items[idx] : null
-  fetchNui('radialResult', { id: selected?.id ?? null })
+
+  if (selected?.keepOpen) {
+    // Enter persistent mode: fire the action, but stay open
+    fetchNui('radialResult', { id: selected.id, closed: false })
+    store.setPersistent(true)
+    return
+  }
+
+  fetchNui('radialResult', { id: selected?.id ?? null, closed: true })
   store.close()
 })
 
 onMounted(() => {
   window.addEventListener('mousemove', onMouseMove)
   window.addEventListener('mousedown', onMouseDown, true)
+  window.addEventListener('keydown', onKeyDown, true)
 })
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mousedown', onMouseDown, true)
+  window.removeEventListener('keydown', onKeyDown, true)
 })
 </script>
 
 <template>
   <Transition name="radial">
     <div v-if="store.visible" class="radial-overlay">
-      <div class="radial-wheel">
+      <div class="radial-wheel" ref="wheelRef">
         <svg class="radial-svg" :viewBox="`0 0 ${VIEW} ${VIEW}`" preserveAspectRatio="xMidYMid meet">
           <path
             v-for="slice in slices"

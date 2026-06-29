@@ -1236,36 +1236,53 @@ local function OpenRadial(data)
         action = 'openRadial',
         data = { items = data.items }
     })
+
+    -- KeepInput leaves movement enabled, but mouse clicks would otherwise count
+    -- as melee/aim/fire in the game world. Disable those controls per-frame
+    -- while the radial is open. Loop exits as soon as radialOpen flips back.
+    CreateThread(function()
+        local pid = PlayerId()
+        while radialOpen do
+            DisableControlAction(0, 1,   true) -- Look LR  (camera horizontal / mouse X)
+            DisableControlAction(0, 2,   true) -- Look UD  (camera vertical / mouse Y)
+            DisableControlAction(0, 24,  true) -- Attack (LMB / fist)
+            DisableControlAction(0, 257, true) -- Attack2
+            DisableControlAction(0, 25,  true) -- Aim (RMB)
+            DisableControlAction(0, 263, true) -- Melee Attack 1
+            DisableControlAction(0, 264, true) -- Melee Attack 2
+            DisableControlAction(0, 140, true) -- Melee Light
+            DisableControlAction(0, 141, true) -- Melee Heavy
+            DisableControlAction(0, 142, true) -- Melee Alternate
+            DisablePlayerFiring(pid, true)     -- prevent firearms discharge
+            Wait(0)
+        end
+    end)
 end
 
---- Close the active radial. The NUI side immediately sends back the
---- currently hovered item id via the radialResult callback, which then
---- invokes the onSelect from OpenRadial.
+--- Close the active radial. The NUI side decides whether to actually close
+--- (normal item) or to stay open in cursor mode (keepOpen item) and reports
+--- back via the radialResult callback with a `closed` flag.
 local function CloseRadial()
     if not radialOpen then return end
-    radialOpen = false
-
     SendNUIMessage({ action = 'closeRadial' })
-    SetNuiFocusKeepInput(false)
-    SetNuiFocus(false, false)
 end
 
--- NUI Callback: receives the selected item id when the radial closes
+-- NUI Callback: receives the selected item id and a `closed` flag.
+-- closed=false → an item with keepOpen=true was selected, stay open (cursor mode).
+-- closed=true (or absent, for backwards compat) → release focus and reset state.
 RegisterNUICallback('radialResult', function(data, cb)
-    local cbFn = radialCallback
-    radialCallback = nil
+    if data.id and radialCallback then
+        local ok, err = pcall(radialCallback, data.id)
+        if not ok then print('^1[EF_LIB] Radial onSelect error: ' .. tostring(err) .. '^0') end
+    end
 
-    -- NUI closed itself (left-click on an end-item) → reset state and free focus
-    if data.selfClosed then
+    if data.closed ~= false then
+        radialCallback = nil
         radialOpen = false
         SetNuiFocusKeepInput(false)
         SetNuiFocus(false, false)
     end
 
-    if cbFn and data.id then
-        local ok, err = pcall(cbFn, data.id)
-        if not ok then print('^1[EF_LIB] Radial onSelect error: ' .. tostring(err) .. '^0') end
-    end
     cb('ok')
 end)
 

@@ -387,7 +387,7 @@ onUnmounted(() => {
 
         </div>
 
-        <div class="menu-items">
+        <div class="menu-items" :class="{ 'no-mouse': !menuStore.cursorEnabled }">
           <div
             v-for="(item, index) in displayItems"
             :key="item.id"
@@ -543,6 +543,12 @@ onUnmounted(() => {
 .menu-items {
   flex: 1;
   overflow-y: auto;
+}
+
+/* Cursor unsichtbar → keine Maus-Steuerung, damit die Spieler-Maus nicht
+   versehentlich Items vorwählt während mit Tastatur navigiert wird. */
+.menu-items.no-mouse {
+  pointer-events: none;
 }
 
 .menu-item {

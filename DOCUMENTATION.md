@@ -1194,6 +1194,7 @@ Jedes Item:
 | `label` | string | Anzeigetext unter dem Icon |
 | `icon` | string (optional) | FontAwesome-Icon (z.B. `'fa-phone'`, `'fa-solid fa-key'`) |
 | `submenu` | table (optional) | Verschachtelte Items — verwandelt den Slice zu einem Drill-Down |
+| `keepOpen` | boolean (optional) | Nach dem Auslösen bleibt das Radial offen (Cursor-Modus); nur sinnvoll auf End-Items |
 
 ### Verhalten
 
@@ -1204,6 +1205,27 @@ Jedes Item:
 - **Linksklick auf Submenu-Item** → öffnet das Submenü (Drill-Down)
 - **Linksklick im Zentrum** (im Submenü) → eine Ebene zurück
 - **Submenu-Indikator**: drei kleine Punkte (`fa-ellipsis`) unter dem Label
+
+### Cursor-Modus (keepOpen)
+
+Setzt ein End-Item `keepOpen = true`, läuft beim Auslösen `onSelect(id)` und das Radial **bleibt offen** im Cursor-Modus. Hold-to-trigger ist dann abgeschaltet — nur Linksklick triggert weitere Items. Geschlossen wird explizit durch:
+
+- **ESC**
+- **Linksklick im Zentrum** auf oberster Ebene (im Submenü navigiert es weiter zurück)
+- Auswahl eines Items **ohne** `keepOpen`
+
+Beispiel für eine Aktions-Serie (mehrere Handfesseln-Aktionen direkt nacheinander):
+
+```lua
+{
+    id = 'cuff', label = 'Handfesseln', icon = 'fa-handcuffs',
+    submenu = {
+        { id = 'cuff:apply',   label = 'Anlegen',  icon = 'fa-lock',          keepOpen = true },
+        { id = 'cuff:drag',    label = 'Ziehen',   icon = 'fa-hand-fist',     keepOpen = true },
+        { id = 'cuff:release', label = 'Lösen',    icon = 'fa-lock-open' },
+    }
+}
+```
 
 ### Typisches Setup
 
