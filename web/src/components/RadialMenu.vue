@@ -231,6 +231,7 @@ onUnmounted(() => {
   <Transition name="radial">
     <div v-if="store.visible" class="radial-overlay">
       <div class="radial-wheel" ref="wheelRef">
+        <div class="radial-disc glass"></div>
         <svg class="radial-svg" :viewBox="`0 0 ${VIEW} ${VIEW}`" preserveAspectRatio="xMidYMid meet">
           <path
             v-for="slice in slices"
@@ -240,6 +241,7 @@ onUnmounted(() => {
             :class="{ active: store.activeIndex === slice.index }"
           />
         </svg>
+        <div class="radial-hole"></div>
 
         <div class="radial-labels">
         <div
@@ -276,7 +278,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
   pointer-events: none;
 }
 
@@ -286,22 +288,38 @@ onUnmounted(() => {
   height: min(80vmin, 600px);
 }
 
+/* Disc and hole follow OUTER_R / INNER_R of the SVG (220 and 75 of 500) */
+.radial-disc {
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+}
+
+.radial-hole {
+  position: absolute;
+  inset: 35%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 .radial-svg {
+  position: relative;
   width: 100%;
   height: 100%;
   display: block;
-  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
 }
 
 .slice {
-  fill: rgba(20, 20, 24, 0.85);
-  stroke: rgba(255, 255, 255, 0.08);
+  fill: transparent;
+  stroke: rgba(255, 255, 255, 0.06);
   stroke-width: 1;
-  transition: fill 0.12s ease;
+  transition: fill 0.12s ease, stroke 0.12s ease;
 }
 
 .slice.active {
-  fill: var(--accent-color);
+  fill: rgba(var(--accent-rgb), 0.32);
+  stroke: rgba(var(--accent-rgb), 0.55);
 }
 
 .radial-labels {
@@ -316,39 +334,41 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  transition: color 0.12s ease, transform 0.12s ease;
+  gap: 6px;
+  color: var(--text-2);
+  transition: color 0.12s ease, transform 0.2s var(--ease);
   pointer-events: none;
 }
 
 .label i {
-  font-size: clamp(18px, 3vmin, 26px);
+  font-size: clamp(18px, 3vmin, 24px);
   line-height: 1;
 }
 
 .label-text {
   font-size: clamp(11px, 1.5vmin, 14px);
-  font-weight: 600;
-  letter-spacing: 0.005em;
+  font-weight: 500;
   white-space: nowrap;
 }
 
 .label.active {
-  color: #ffffff;
+  color: var(--text);
   transform: translate(-50%, -50%) scale(1.08);
 }
 
+.label.active i {
+  color: #ffffff;
+}
+
 .submenu-indicator {
+  margin-top: 1px;
   font-size: clamp(8px, 1.1vmin, 10px);
   letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.4);
-  margin-top: 2px;
+  color: var(--text-3);
 }
 
 .label.active .submenu-indicator {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text-2);
 }
 
 /* Center back-arrow (visible only inside submenus) */
@@ -360,9 +380,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  color: rgba(255, 255, 255, 0.55);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  gap: 4px;
+  color: var(--text-2);
   pointer-events: none;
 }
 
@@ -373,9 +392,7 @@ onUnmounted(() => {
 
 .center-text {
   font-size: clamp(10px, 1.3vmin, 12px);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-weight: 500;
 }
 
 /* ─── Transitions ─── */
@@ -386,7 +403,7 @@ onUnmounted(() => {
 
 .radial-enter-active .radial-wheel,
 .radial-leave-active .radial-wheel {
-  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease;
+  transition: transform 0.3s var(--ease), opacity 0.18s ease;
 }
 
 .radial-enter-from,
@@ -396,7 +413,7 @@ onUnmounted(() => {
 
 .radial-enter-from .radial-wheel,
 .radial-leave-to .radial-wheel {
-  transform: scale(0.85);
+  transform: scale(0.88);
   opacity: 0;
 }
 </style>

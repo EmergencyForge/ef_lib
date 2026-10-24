@@ -49,7 +49,8 @@ Das Projekt wird hobbymäßig von **EmergencyForge** entwickelt und ist für jeg
 
 | Einstellung | Typ | Standard | Beschreibung |
 |---|---|---|---|
-| `Config.AccentColor` | string | `'#ff0000'` | Akzentfarbe der UI (HEX) |
+| `Config.AccentColor` | string | `'#f0500a'` | Akzentfarbe der UI (HEX) |
+| `Config.ScreenBlur` | boolean | `true` | Spielbild hinter Dialogen, Minispielen und Radialmenü verwischen |
 | `Config.EnableDemo` | boolean | `false` | Demo-Menü per F2 anzeigen |
 | `Config.ShowCursor` | boolean | `false` | Globale Cursor-Sichtbarkeit |
 | `Config.AllowMove` | boolean | `true` | Spielerbewegung in Menüs erlauben |

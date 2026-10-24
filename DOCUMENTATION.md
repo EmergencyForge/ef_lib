@@ -16,7 +16,11 @@ Bearbeite `config.lua` um die Grundeinstellungen anzupassen:
 Config = {}
 
 -- Akzentfarbe (HEX Code)
-Config.AccentColor = '#3b82f6'
+Config.AccentColor = '#f0500a'
+
+-- Spielbild hinter Dialogen, Minispielen und Radialmenü verwischen
+-- Die NUI kann das Spiel selbst nicht verwischen, dafür nutzt ef_lib den Screen-Blur von GTA
+Config.ScreenBlur = true
 
 -- Demo-Menü aktivieren (in Produktion auf false setzen)
 Config.EnableDemo = true
@@ -40,6 +44,7 @@ Config.MenuKey = 'F2'
 ### Verfügbare Farben (Beispiele)
 | Farbe | HEX Code |
 |-------|----------|
+| EmergencyForge-Orange (Standard) | `#f0500a` |
 | Blau | `#3b82f6` |
 | Rot | `#ef4444` |
 | Grün | `#22c55e` |

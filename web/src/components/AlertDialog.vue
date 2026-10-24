@@ -54,7 +54,7 @@ onUnmounted(() => {
 <template>
   <Transition name="alert">
     <div v-if="dialogStore.alertDialogVisible" class="alert-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
-      <div class="alert-modal" :class="{ centered: dialogStore.alertDialogData.centered }">
+      <div class="alert-modal glass" :class="{ centered: dialogStore.alertDialogData.centered }">
         <!-- Icon -->
         <div class="alert-icon">
           <i class="fa-solid fa-circle-exclamation"></i>
@@ -93,7 +93,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.55);
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.6));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,16 +101,11 @@ onUnmounted(() => {
 }
 
 .alert-modal {
-  width: 400px;
-  background: linear-gradient(180deg, rgb(24, 24, 28) 0%, rgb(18, 18, 22) 100%);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  padding: 22px 22px 20px 22px;
+  width: 420px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  isolation: isolate;
+  gap: 8px;
 }
 
 .alert-modal.centered {
@@ -120,18 +115,18 @@ onUnmounted(() => {
 
 /* Icon */
 .alert-icon {
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22), rgba(var(--accent-rgb), 0.08));
-  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.25);
-  border-radius: 4px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.18);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   color: var(--accent-color);
-  font-size: 14px;
+  font-size: 19px;
   line-height: 1;
-  margin-bottom: 2px;
 }
 
 .alert-icon i {
@@ -141,26 +136,26 @@ onUnmounted(() => {
 
 /* Header */
 .alert-header {
-  font-size: 1rem;
+  font-size: 18px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
   letter-spacing: -0.01em;
+  color: var(--text);
   margin: 0;
 }
 
 /* Content */
 .alert-content {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
   line-height: 1.5;
+  color: var(--text-2);
   margin: 0;
 }
 
 /* Buttons */
 .alert-buttons {
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 16px;
   width: 100%;
 }
 
@@ -169,36 +164,36 @@ onUnmounted(() => {
 }
 
 .btn {
-  padding: 9px 20px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  letter-spacing: 0.005em;
-  transition: background-color 0.15s ease, color 0.15s ease, filter 0.15s ease;
   flex: 1;
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius-ctl);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, filter 0.15s ease;
 }
 
 .btn-cancel {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.7);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: var(--fill-2);
+  color: var(--text);
+  box-shadow: var(--ctl-rim);
 }
 
 .btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: var(--fill-3);
 }
 
 .btn-confirm {
   background: var(--accent-color);
-  color: #ffffff;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px -6px rgba(var(--accent-rgb), 0.7);
 }
 
 .btn-confirm:hover {
-  filter: brightness(1.12);
+  filter: brightness(1.08);
 }
 
 /* ─── Transitions ─── */
@@ -212,7 +207,7 @@ onUnmounted(() => {
 }
 
 .alert-enter-active .alert-modal {
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  transition: transform 0.3s var(--ease), opacity 0.2s ease-out;
 }
 
 .alert-leave-active .alert-modal {
@@ -226,7 +221,7 @@ onUnmounted(() => {
 
 .alert-enter-from .alert-modal,
 .alert-leave-to .alert-modal {
-  transform: scale(0.92);
+  transform: scale(0.94);
   opacity: 0;
 }
 </style>

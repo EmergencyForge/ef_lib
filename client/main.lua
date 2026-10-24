@@ -20,6 +20,31 @@ local alertDialogPromise = nil
 local minigamePromise = nil
 
 -----------------------
+-- Screen Blur
+-----------------------
+
+-- Counted, because a dialog can open on top of the radial or another dialog
+local blurCount = 0
+
+local function PushScreenBlur()
+    if not Config.ScreenBlur then return end
+    blurCount = blurCount + 1
+    if blurCount == 1 then TriggerScreenblurFadeIn(250.0) end
+end
+
+local function PopScreenBlur()
+    if blurCount == 0 then return end
+    blurCount = blurCount - 1
+    if blurCount == 0 then TriggerScreenblurFadeOut(250.0) end
+end
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource == GetCurrentResourceName() and blurCount > 0 then
+        TriggerScreenblurFadeOut(0.0)
+    end
+end)
+
+-----------------------
 -- Callback System
 -----------------------
 
@@ -541,34 +566,34 @@ end
 local function GetUISettingsMenu()
     return {
         id = '_ui_settings',
-        label = 'UI Settings',
-        description = 'Menu position & color',
+        label = 'Oberfläche',
+        description = 'Menüposition und Farbe',
         submenu = {
-            title = 'UI Settings',
+            title = 'Oberfläche',
             items = {
-                { id = '_settings_position', label = 'Menu Position', type = 'select', value = 'left', options = { 'left', 'center', 'right' } },
-                { id = '_settings_color', label = 'Accent Color', type = 'input', value = '#3b82f6', placeholder = '#ff0000' },
+                { id = '_settings_position', label = 'Menüposition', type = 'select', value = 'left', options = { 'left', 'center', 'right' } },
+                { id = '_settings_color', label = 'Akzentfarbe', type = 'input', value = '#f0500a', placeholder = '#ff0000' },
                 {
                     id = '_settings_notifications',
-                    label = 'Notifications',
-                    description = 'Notification settings',
+                    label = 'Meldungen',
+                    description = 'Position der Meldungen',
                     submenu = {
-                        title = 'Notification Settings',
+                        title = 'Meldungen',
                         items = {
                             { id = '_settings_notif_position', label = 'Position', type = 'select', value = 'top-right', options = { 'top-right', 'top-left', 'bottom-right', 'bottom-left' } },
-                            { id = '_settings_notif_test', label = 'Test Notification', description = 'Send a test notification' }
+                            { id = '_settings_notif_test', label = 'Testmeldung', description = 'Zeigt eine Meldung an der gewählten Position' }
                         }
                     }
                 },
                 {
                     id = '_settings_reset',
-                    label = 'Reset to Defaults',
-                    description = 'Restore default settings',
+                    label = 'Zurücksetzen',
+                    description = 'Standardwerte wiederherstellen',
                     confirm = {
-                        title = 'Reset Settings?',
-                        message = 'Reset all UI settings to defaults',
-                        confirmLabel = 'Yes, Reset',
-                        cancelLabel = 'Cancel'
+                        title = 'Einstellungen zurücksetzen?',
+                        message = 'Position und Farbe gehen auf die Standardwerte zurück.',
+                        confirmLabel = 'Zurücksetzen',
+                        cancelLabel = 'Abbrechen'
                     }
                 }
             }
@@ -849,6 +874,7 @@ local function InputDialog(title, fields)
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(false)
 
+    PushScreenBlur()
     SendNUIMessage({
         action = 'openInputDialog',
         data = {
@@ -860,6 +886,7 @@ local function InputDialog(title, fields)
     -- Block until user confirms or cancels
     local result = Citizen.Await(inputDialogPromise)
     inputDialogPromise = nil
+    PopScreenBlur()
 
     -- Restore focus: if menu is open restore its cursor/keepInput state, otherwise release
     if isMenuOpen then
@@ -905,6 +932,7 @@ local function AlertDialog(data)
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(false)
 
+    PushScreenBlur()
     SendNUIMessage({
         action = 'openAlertDialog',
         data = data
@@ -913,6 +941,7 @@ local function AlertDialog(data)
     -- Block until user confirms or cancels
     local result = Citizen.Await(alertDialogPromise)
     alertDialogPromise = nil
+    PopScreenBlur()
 
     -- Restore focus: if menu is open restore its cursor/keepInput state, otherwise release
     if isMenuOpen then
@@ -966,6 +995,7 @@ local function Minigame(gameType, difficulty, retries)
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(false)
 
+    PushScreenBlur()
     SendNUIMessage({
         action = 'openMinigame',
         data = {
@@ -977,6 +1007,7 @@ local function Minigame(gameType, difficulty, retries)
 
     local result = Citizen.Await(minigamePromise)
     minigamePromise = nil
+    PopScreenBlur()
 
     if isMenuOpen then
         SetNuiFocus(true, menuHasCursor)
@@ -1232,6 +1263,7 @@ local function OpenRadial(data)
 
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(true)
+    PushScreenBlur()
     SendNUIMessage({
         action = 'openRadial',
         data = { items = data.items }
@@ -1279,6 +1311,7 @@ RegisterNUICallback('radialResult', function(data, cb)
     if data.closed ~= false then
         radialCallback = nil
         radialOpen = false
+        PopScreenBlur()
         SetNuiFocusKeepInput(false)
         SetNuiFocus(false, false)
     end

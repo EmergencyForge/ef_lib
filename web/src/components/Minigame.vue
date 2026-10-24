@@ -308,16 +308,17 @@ function renderDial() {
   // Outer ring
   ctx.beginPath()
   ctx.arc(CX, CY, outerR, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(20, 20, 20, 0.9)'
+  ctx.fillStyle = 'rgba(16, 16, 18, 0.7)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)'
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)'
   ctx.lineWidth = 1.5
   ctx.stroke()
 
   // Dial face
-  const grad = ctx.createRadialGradient(CX, CY, innerR * 0.3, CX, CY, outerR)
-  grad.addColorStop(0, 'rgba(30, 35, 48, 0.9)')
-  grad.addColorStop(1, 'rgba(18, 22, 32, 0.95)')
+  // Light falls in from the top left, like the glass panels
+  const grad = ctx.createRadialGradient(CX - 120, CY - 140, 20, CX, CY, outerR)
+  grad.addColorStop(0, 'rgba(58, 58, 64, 0.85)')
+  grad.addColorStop(1, 'rgba(20, 20, 23, 0.9)')
   ctx.beginPath()
   ctx.arc(CX, CY, innerR + 45, 0, Math.PI * 2)
   ctx.fillStyle = grad
@@ -325,7 +326,7 @@ function renderDial() {
 
   // Numbers and ticks
   const degreesPerNum = 360 / cfg.numbers
-  const accentCSS = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#3b82f6'
+  const accentCSS = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#f0500a'
 
   for (let i = 0; i < cfg.numbers; i++) {
     const angle = (i * degreesPerNum + sdDialAngle.value - 90) * Math.PI / 180
@@ -346,7 +347,7 @@ function renderDial() {
       const ny = CY + Math.sin(angle) * numR
       const isTarget = !resolved.value && sdCurrentCode.value < sdTargets.value.length && i === sdTargets.value[sdCurrentCode.value]
 
-      ctx.font = `${isTarget ? '700' : '500'} ${isTarget ? '18px' : '13px'} 'Segoe UI', sans-serif`
+      ctx.font = `${isTarget ? '700' : '500'} ${isTarget ? '18px' : '13px'} Geist, 'Segoe UI', sans-serif`
       ctx.fillStyle = isTarget ? accentCSS : 'rgba(255,255,255,0.45)'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -363,20 +364,20 @@ function renderDial() {
   // Inner circle
   ctx.beginPath()
   ctx.arc(CX, CY, innerR - 18, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(15, 18, 26, 0.95)'
+  ctx.fillStyle = 'rgba(10, 10, 12, 0.85)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)'
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'
   ctx.lineWidth = 1
   ctx.stroke()
 
   // Current number
-  ctx.font = "800 64px 'Segoe UI', sans-serif"
+  ctx.font = "700 64px Geist, 'Segoe UI', sans-serif"
   ctx.fillStyle = 'rgba(255,255,255,0.85)'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(String(sdCurrentNumber.value), CX, CY - 6)
 
-  ctx.font = "500 10px 'Segoe UI', sans-serif"
+  ctx.font = "500 11px Geist, 'Segoe UI', sans-serif"
   ctx.fillStyle = 'rgba(255,255,255,0.3)'
   ctx.fillText('AKTUELL', CX, CY + 36)
 
@@ -620,7 +621,7 @@ onUnmounted(() => {
 <template>
   <Transition name="mg">
     <div v-if="store.visible" class="mg-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
-      <div class="mg-container">
+      <div class="mg-container glass">
 
         <!-- ── HEADER ── -->
         <div class="mg-header">
@@ -677,7 +678,8 @@ onUnmounted(() => {
         <div v-if="store.gameType === 'safedial'" class="mg-body sd-body">
           <!-- Direction -->
           <div class="sd-direction" :class="{ left: sdDirections[sdCurrentCode] === -1, right: sdDirections[sdCurrentCode] === 1 }">
-            {{ sdDirections[sdCurrentCode] === -1 ? '◄ LINKS DREHEN' : 'RECHTS DREHEN ►' }}
+            <i :class="sdDirections[sdCurrentCode] === -1 ? 'fa-solid fa-rotate-left' : 'fa-solid fa-rotate-right'"></i>
+            {{ sdDirections[sdCurrentCode] === -1 ? 'Links drehen' : 'Rechts drehen' }}
           </div>
           <!-- Canvas -->
           <div class="sd-canvas-wrap">
@@ -745,8 +747,8 @@ onUnmounted(() => {
         <Transition name="result">
           <div v-if="resultVisible" class="mg-result" :class="{ success: resultSuccess, fail: !resultSuccess }">
             <div class="mg-result-content">
-              <div class="mg-result-icon">{{ resultSuccess ? '🔓' : '🔒' }}</div>
-              <div class="mg-result-text">{{ resultSuccess ? 'ERFOLG' : 'FEHLGESCHLAGEN' }}</div>
+              <div class="mg-result-icon"><i :class="resultSuccess ? 'fa-solid fa-lock-open' : 'fa-solid fa-lock'"></i></div>
+              <div class="mg-result-text">{{ resultSuccess ? 'Geschafft' : 'Fehlgeschlagen' }}</div>
             </div>
           </div>
         </Transition>
@@ -755,17 +757,17 @@ onUnmounted(() => {
       <!-- Controls hint below card -->
       <div class="mg-controls">
         <template v-if="store.gameType === 'lockpick'">
-          <span class="mg-ctrl"><kbd>SPACE</kbd> Pin fixieren</span>
+          <span class="mg-ctrl"><kbd class="kbd">SPACE</kbd> Pin fixieren</span>
           <span class="mg-ctrl-sep">·</span>
-          <span class="mg-ctrl"><kbd>ESC</kbd> Abbrechen</span>
+          <span class="mg-ctrl"><kbd class="kbd">ESC</kbd> Abbrechen</span>
         </template>
         <template v-if="store.gameType === 'safedial'">
-          <span class="mg-ctrl"><kbd>A</kbd> Links</span>
-          <span class="mg-ctrl"><kbd>D</kbd> Rechts</span>
-          <span class="mg-ctrl"><kbd>SPACE</kbd> Bestätigen</span>
+          <span class="mg-ctrl"><kbd class="kbd">A</kbd> Links</span>
+          <span class="mg-ctrl"><kbd class="kbd">D</kbd> Rechts</span>
+          <span class="mg-ctrl"><kbd class="kbd">SPACE</kbd> Bestätigen</span>
         </template>
         <template v-if="store.gameType === 'reactionchain'">
-          <span class="mg-ctrl"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> Taste drücken wenn Feld aufleuchtet</span>
+          <span class="mg-ctrl"><kbd class="kbd">1</kbd><kbd class="kbd">2</kbd><kbd class="kbd">3</kbd><kbd class="kbd">4</kbd> Taste drücken wenn Feld aufleuchtet</span>
         </template>
       </div>
     </div>
@@ -786,15 +788,12 @@ onUnmounted(() => {
   justify-content: center;
   gap: 16px;
   z-index: 1200;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.55));
 }
 
 .mg-container {
-  position: relative;
   width: 540px;
-  background: rgba(15, 15, 15, 0.95);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  padding: 8px;
   overflow: hidden;
   outline: none;
   transition: outline 0.15s ease;
@@ -805,47 +804,53 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 12px 14px;
 }
 
-.mg-brand { display: flex; align-items: center; gap: 10px; }
+.mg-brand { display: flex; align-items: center; gap: 12px; }
 
 .mg-icon {
-  width: 36px; height: 36px;
+  width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(var(--accent-rgb), 0.12);
-  border-radius: 8px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.18);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   color: var(--accent-color);
 }
 
 .mg-title {
-  font-size: 0.85rem; font-weight: 600; color: #fff;
-  letter-spacing: 1px;
+  font-size: 16px; font-weight: 600; color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .mg-subtitle {
-  font-size: 0.7rem; color: rgba(255,255,255,0.35); margin-top: 1px;
+  font-size: 12px; color: var(--text-3); margin-top: 1px;
 }
 
-.mg-stats { display: flex; gap: 18px; }
+.mg-stats { display: flex; gap: 8px; }
 
-.mg-stat { text-align: right; }
+.mg-stat {
+  min-width: 72px;
+  padding: 6px 12px;
+  border-radius: var(--radius-ctl);
+  background: var(--well);
+  box-shadow: var(--well-rim);
+  text-align: right;
+}
 
 .mg-stat-label {
-  font-size: 0.6rem; font-weight: 500;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  color: var(--text-3);
 }
 
 .mg-stat-value {
-  font-size: 1.1rem; font-weight: 700;
-  color: var(--accent-color);
+  font-size: 17px; font-weight: 600;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .mg-stat-value.warn {
-  color: #f87171;
+  color: var(--danger);
   animation: statPulse 0.6s ease-in-out infinite alternate;
 }
 
@@ -853,82 +858,104 @@ onUnmounted(() => {
 
 /* ── Body ── */
 .mg-body {
+  margin: 0 4px;
   padding: 20px;
   min-height: 200px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* ── Footer ── */
 .mg-footer {
   display: flex; align-items: center;
-  padding: 12px 20px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  background: rgba(0,0,0,0.25);
+  padding: 14px 12px 6px;
   gap: 16px;
 }
 
 .mg-progress-track {
-  flex: 1; height: 3px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 3px; overflow: hidden;
+  flex: 1; height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--well);
+  box-shadow: var(--well-rim);
+  overflow: hidden;
 }
 
 .mg-progress-fill {
   height: 100%;
+  border-radius: inherit;
   background: var(--accent-color);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.4);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 60%);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
+  transition: width 0.3s var(--ease);
 }
 
 .mg-progress-label {
-  font-size: 0.7rem; font-weight: 500;
-  color: rgba(255,255,255,0.4);
+  font-size: 12px; font-weight: 500;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 /* ── Controls hint ── */
 .mg-controls {
-  display: flex; align-items: center; gap: 16px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(10, 10, 12, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .mg-ctrl {
-  font-size: 0.7rem; color: rgba(255,255,255,0.3);
+  font-size: 12px; color: var(--text-2);
   display: flex; align-items: center; gap: 4px;
 }
 
-.mg-ctrl-sep { color: rgba(255,255,255,0.15); }
+.mg-ctrl + .mg-ctrl { margin-left: 8px; }
 
-kbd {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 22px; height: 20px; padding: 0 5px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px;
-  font-size: 0.65rem; font-weight: 600;
-  color: rgba(255,255,255,0.5);
-  font-family: inherit;
-}
+.mg-ctrl-sep { color: var(--text-3); }
 
 /* ── Result Overlay ── */
 .mg-result {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  z-index: 10; border-radius: 12px;
-  backdrop-filter: blur(4px);
+  z-index: 10;
+  border-radius: inherit;
+  /* Blurs the card itself, which is inside the NUI page and therefore works */
+  backdrop-filter: blur(8px);
 }
 
-.mg-result.success { background: rgba(74, 222, 128, 0.06); }
-.mg-result.fail { background: rgba(248, 113, 113, 0.06); }
+.mg-result.success { background: rgba(10, 30, 16, 0.55); }
+.mg-result.fail { background: rgba(36, 12, 12, 0.55); }
 
 .mg-result-content { text-align: center; }
-.mg-result-icon { font-size: 40px; margin-bottom: 8px; }
 
-.mg-result-text {
-  font-size: 1.2rem; font-weight: 700; letter-spacing: 4px;
+.mg-result-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  font-size: 26px;
 }
 
-.mg-result.success .mg-result-text { color: #4ade80; text-shadow: 0 0 20px rgba(74,222,128,0.5); }
-.mg-result.fail .mg-result-text { color: #f87171; text-shadow: 0 0 20px rgba(248,113,113,0.5); }
+.mg-result.success .mg-result-icon {
+  color: var(--ok);
+  background: rgba(var(--ok-rgb), 0.16);
+  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.4), 0 0 32px rgba(var(--ok-rgb), 0.25);
+}
+
+.mg-result.fail .mg-result-icon {
+  color: var(--danger);
+  background: rgba(var(--danger-rgb), 0.16);
+  box-shadow: inset 0 0 0 1px rgba(var(--danger-rgb), 0.4), 0 0 32px rgba(var(--danger-rgb), 0.25);
+}
+
+.mg-result-text {
+  font-size: 20px; font-weight: 600; letter-spacing: -0.01em;
+}
+
+.mg-result.success .mg-result-text { color: var(--ok); }
+.mg-result.fail .mg-result-text { color: var(--danger); }
 
 /* ══════════════════════════════════════════════════════════════
    LOCKPICK
@@ -944,17 +971,16 @@ kbd {
   left: 0; right: 0;
   height: 1.5px;
   background: var(--accent-color);
-  opacity: 0.4;
+  opacity: 0.5;
   z-index: 5;
   pointer-events: none;
-  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.4);
 }
 
 .lp-shear-label {
-  position: absolute; right: 4px; top: -14px;
-  font-size: 0.55rem; font-weight: 600;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--accent-color); opacity: 0.5;
+  position: absolute; right: 4px; top: -16px;
+  font-size: 11px; font-weight: 500;
+  color: var(--accent-color); opacity: 0.8;
 }
 
 .lp-pins {
@@ -969,69 +995,66 @@ kbd {
 
 .lp-channel {
   width: 36px; height: 260px;
-  background: rgba(0,0,0,0.35);
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   position: relative; overflow: hidden;
+  transition: box-shadow 0.15s ease;
 }
 
 .lp-sweet {
   position: absolute; left: 0; right: 0;
-  background: rgba(74, 222, 128, 0.1);
-  border-top: 1px dashed rgba(74,222,128,0.25);
-  border-bottom: 1px dashed rgba(74,222,128,0.25);
+  background: rgba(var(--ok-rgb), 0.12);
+  border-top: 1px dashed rgba(var(--ok-rgb), 0.35);
+  border-bottom: 1px dashed rgba(var(--ok-rgb), 0.35);
   pointer-events: none;
 }
 
 .lp-pin {
   position: absolute; left: 50%; transform: translateX(-50%);
-  width: 28px; border-radius: 4px;
+  width: 26px;
+  border-radius: 13px;
   transition: background 0.1s ease;
 }
 
 .lp-driver {
   height: 56px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .lp-key {
   height: 48px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px 4px 6px 6px;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .lp-label {
-  font-size: 0.65rem; font-weight: 600;
-  color: rgba(255,255,255,0.2);
-  margin-top: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--text-3);
+  margin-top: 8px;
 }
 
 /* States */
 .lp-col.active .lp-channel {
-  border-color: rgba(var(--accent-rgb), 0.2);
-  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.06);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(var(--accent-rgb), 0.5), 0 0 16px rgba(var(--accent-rgb), 0.15);
 }
 .lp-col.active .lp-key {
   background: var(--accent-color);
-  border-color: var(--accent-color);
-  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px rgba(var(--accent-rgb), 0.5);
 }
 .lp-col.active .lp-label { color: var(--accent-color); }
 
 .lp-col.locked .lp-key {
-  background: #4ade80;
-  border-color: #4ade80;
-  box-shadow: 0 0 10px rgba(74,222,128,0.4);
+  background: var(--ok);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px rgba(var(--ok-rgb), 0.4);
 }
-.lp-col.locked .lp-channel { border-color: rgba(74,222,128,0.12); }
-.lp-col.locked .lp-label { color: #4ade80; }
+.lp-col.locked .lp-channel { box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(var(--ok-rgb), 0.3); }
+.lp-col.locked .lp-label { color: var(--ok); }
 
 .lp-col.failed .lp-key {
-  background: #f87171;
-  border-color: #f87171;
-  box-shadow: 0 0 10px rgba(248,113,113,0.4);
+  background: var(--danger);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 10px rgba(var(--danger-rgb), 0.4);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1044,18 +1067,19 @@ kbd {
 }
 
 .sd-direction {
-  font-size: 0.75rem; font-weight: 600;
-  letter-spacing: 2px; text-transform: uppercase;
-  padding: 5px 14px; border-radius: 6px;
-  background: rgba(var(--accent-rgb), 0.08);
-  border: 1px solid rgba(var(--accent-rgb), 0.15);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 160px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(var(--accent-rgb), 0.14);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.35);
   color: var(--accent-color);
-  transition: all 0.2s ease;
-  min-width: 150px; text-align: center;
+  font-size: 13px; font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.sd-direction.left { color: #60a5fa; border-color: rgba(96,165,250,0.15); background: rgba(96,165,250,0.06); }
-.sd-direction.right { color: #c084fc; border-color: rgba(192,132,252,0.15); background: rgba(192,132,252,0.06); }
+.sd-direction.left { color: var(--info); background: rgba(var(--info-rgb), 0.14); box-shadow: inset 0 0 0 1px rgba(var(--info-rgb), 0.35); }
+.sd-direction.right { color: #c084fc; background: rgba(192, 132, 252, 0.14); box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.35); }
 
 .sd-canvas-wrap {
   position: relative; width: 300px; height: 300px;
@@ -1063,7 +1087,7 @@ kbd {
 
 .sd-canvas {
   width: 300px; height: 300px;
-  filter: drop-shadow(0 0 20px rgba(var(--accent-rgb), 0.08));
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45));
 }
 
 .sd-marker {
@@ -1082,30 +1106,30 @@ kbd {
 }
 
 .sd-num {
-  width: 40px; height: 40px;
+  width: 42px; height: 42px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1rem; font-weight: 700;
-  border-radius: 8px;
-  background: rgba(0,0,0,0.3);
-  border: 1.5px solid rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.25);
-  transition: all 0.25s ease;
+  font-size: 16px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--radius-ctl);
+  background: var(--well);
+  box-shadow: var(--well-rim);
+  color: var(--text-3);
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .sd-num.active {
-  border-color: var(--accent-color);
-  color: var(--accent-color);
-  background: rgba(var(--accent-rgb), 0.06);
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.12);
+  color: var(--text);
+  background: rgba(var(--accent-rgb), 0.2);
+  box-shadow: inset 0 0 0 1px var(--accent-color), 0 0 12px rgba(var(--accent-rgb), 0.25);
 }
 
 .sd-num.solved {
-  border-color: #4ade80; color: #4ade80;
-  background: rgba(74,222,128,0.06);
-  box-shadow: 0 0 10px rgba(74,222,128,0.12);
+  color: var(--ok);
+  background: rgba(var(--ok-rgb), 0.12);
+  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.5);
 }
 
-.sd-sep { color: rgba(255,255,255,0.15); font-size: 1rem; }
+.sd-sep { color: var(--text-3); font-size: 16px; }
 
 /* ══════════════════════════════════════════════════════════════
    REACTION CHAIN
@@ -1120,101 +1144,101 @@ kbd {
 
 .rc-cell {
   width: 100px; height: 110px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.3);
-  border: 2px solid rgba(255,255,255,0.04);
+  border-radius: 14px;
+  background: var(--fill-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 8px; cursor: pointer;
-  transition: all 0.12s ease;
+  transition: box-shadow 0.12s ease, background 0.12s ease;
   position: relative; overflow: hidden;
 }
 
 .rc-letter {
-  font-size: 1.6rem; font-weight: 700;
-  color: rgba(255,255,255,0.15);
-  transition: all 0.12s ease;
+  font-size: 26px; font-weight: 600;
+  color: var(--text-3);
+  transition: color 0.12s ease, transform 0.12s ease;
 }
 
 .rc-label {
-  font-size: 0.55rem; font-weight: 500;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(255,255,255,0.15);
-  transition: all 0.12s ease;
+  font-size: 11px; font-weight: 500;
+  color: var(--text-3);
+  transition: color 0.12s ease;
 }
 
+/* currentColor instead of color-mix(), which Chromium 103 lacks */
 .rc-cell.lit {
-  border-color: var(--cell-color);
-  box-shadow: 0 0 24px color-mix(in srgb, var(--cell-color) 35%, transparent),
-              inset 0 0 24px color-mix(in srgb, var(--cell-color) 10%, transparent);
+  color: var(--cell-color);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 2px currentColor, inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 24px -6px currentColor;
 }
 
 .rc-cell.lit .rc-letter {
   color: var(--cell-color);
-  text-shadow: 0 0 16px var(--cell-color);
   transform: scale(1.1);
 }
 
-.rc-cell.lit .rc-label { color: var(--cell-color); opacity: 0.8; }
+.rc-cell.lit .rc-label { color: var(--cell-color); }
 
 .rc-cell.hit {
-  border-color: #4ade80;
-  box-shadow: 0 0 24px rgba(74,222,128,0.35);
+  background: rgba(var(--ok-rgb), 0.1);
+  box-shadow: inset 0 0 0 2px var(--ok), 0 0 24px rgba(var(--ok-rgb), 0.3);
 }
-.rc-cell.hit .rc-letter { color: #4ade80; text-shadow: 0 0 16px rgba(74,222,128,0.5); }
+.rc-cell.hit .rc-letter { color: var(--ok); }
 
 .rc-cell.miss {
-  border-color: #f87171;
-  box-shadow: 0 0 24px rgba(248,113,113,0.35);
+  background: rgba(var(--danger-rgb), 0.1);
+  box-shadow: inset 0 0 0 2px var(--danger), 0 0 24px rgba(var(--danger-rgb), 0.3);
 }
-.rc-cell.miss .rc-letter { color: #f87171; text-shadow: 0 0 16px rgba(248,113,113,0.5); }
+.rc-cell.miss .rc-letter { color: var(--danger); }
 
 /* Timing bar */
 .rc-timing-wrap {
-  width: 100%; position: relative; height: 24px;
+  width: 100%; position: relative; height: 26px;
 }
 
 .rc-timing-label {
-  position: absolute; right: 0; top: -2px;
-  font-size: 0.55rem; font-weight: 600;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: rgba(255,255,255,0.2);
+  position: absolute; right: 0; top: -4px;
+  font-size: 11px; font-weight: 500;
+  color: var(--text-3);
 }
 
 .rc-timing-track {
-  width: 100%; height: 5px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 5px; overflow: hidden;
-  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 100%; height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--well);
+  box-shadow: var(--well-rim);
+  overflow: hidden;
+  position: absolute; bottom: 0;
 }
 
 .rc-timing-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent-color), #f87171);
-  border-radius: 5px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-color), var(--danger));
   transition: width 0.05s linear;
 }
 
 /* Chain dots */
 .rc-chain {
-  display: flex; gap: 4px; flex-wrap: wrap; justify-content: center;
+  display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
 }
 
 .rc-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  transition: all 0.2s ease;
+  background: var(--fill-3);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .rc-dot.hit {
-  background: #4ade80;
-  box-shadow: 0 0 6px rgba(74,222,128,0.4);
+  background: var(--ok);
+  box-shadow: 0 0 6px rgba(var(--ok-rgb), 0.5);
 }
 
 .rc-dot.active {
   background: var(--accent-color);
-  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.4);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.5);
   animation: dotPulse 0.8s ease-in-out infinite alternate;
 }
 
@@ -1228,9 +1252,9 @@ kbd {
 .mg-leave-active { transition: opacity 0.2s ease-in; }
 .mg-enter-from, .mg-leave-to { opacity: 0; }
 
-.mg-enter-active .mg-container { transition: transform 0.25s ease-out, opacity 0.25s ease-out; }
+.mg-enter-active .mg-container { transition: transform 0.3s var(--ease), opacity 0.25s ease-out; }
 .mg-leave-active .mg-container { transition: transform 0.2s ease-in, opacity 0.2s ease-in; }
-.mg-enter-from .mg-container, .mg-leave-to .mg-container { transform: scale(0.92); opacity: 0; }
+.mg-enter-from .mg-container, .mg-leave-to .mg-container { transform: scale(0.94); opacity: 0; }
 
 .result-enter-active { transition: opacity 0.2s ease-out; }
 .result-enter-active .mg-result-content { animation: resultPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); }

@@ -16,6 +16,7 @@ import { useDialogStore } from '@/stores/dialog'
 import { useMinigameStore, type MinigameConfig } from '@/stores/minigame'
 import { useProgressStore, type ProgressBarData } from '@/stores/progress'
 import { useNuiEvent, fetchNui, isInGame } from '@/composables/useNui'
+import { DEFAULT_ACCENT } from '@/stores/config'
 
 const menuStore = useMenuStore()
 const notificationStore = useNotificationStore()
@@ -65,7 +66,9 @@ useNuiEvent('notification', (data: {
 
 useNuiEvent('setConfig', (data: { accentColor?: string }) => {
   // Only apply server config if user hasn't customized
-  if (data.accentColor && settingsStore.accentColor === '#3b82f6') {
+  // The old blue default counts as untouched, it predates the orange one
+  const untouched = [DEFAULT_ACCENT, '#3b82f6'].includes(settingsStore.accentColor)
+  if (data.accentColor && untouched) {
     settingsStore.setAccentColor(data.accentColor)
   }
 })

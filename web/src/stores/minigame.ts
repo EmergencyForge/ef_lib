@@ -18,9 +18,9 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
 }
 
 export const TYPE_LABELS: Record<MinigameType, { title: string; subtitle: string }> = {
-  lockpick: { title: 'Lockpick', subtitle: 'Pin-Tumbler Schloss' },
-  safedial: { title: 'Safe Dial', subtitle: 'Kombinations-Tresor' },
-  reactionchain: { title: 'Reaction Chain', subtitle: 'Reaktionstest' },
+  lockpick: { title: 'Schloss knacken', subtitle: 'Stiftzylinder' },
+  safedial: { title: 'Tresor öffnen', subtitle: 'Zahlenschloss' },
+  reactionchain: { title: 'Reaktionskette', subtitle: 'Reaktionstest' },
 }
 
 export const useMinigameStore = defineStore('minigame', () => {

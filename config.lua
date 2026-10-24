@@ -1,8 +1,12 @@
 Config = {}
 
 -- UI Accent Color (HEX Code)
--- Examples: '#3b82f6' (Blue), '#22c55e' (Green), '#ef4444' (Red), '#a855f7' (Purple)
-Config.AccentColor = '#ff0000'
+-- Examples: '#f0500a' (EmergencyForge orange), '#3b82f6' (Blue), '#22c55e' (Green), '#ef4444' (Red)
+Config.AccentColor = '#f0500a'
+
+-- Blur the game behind dialogs, minigames and the radial menu
+-- The NUI cannot blur the game itself, this uses the screen blur effect instead
+Config.ScreenBlur = true
 
 -- Enable Demo Menu (set to false in production)
 -- When enabled, pressing the MenuKey will open a demo menu

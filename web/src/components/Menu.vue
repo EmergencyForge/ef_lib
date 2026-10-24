@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { useMenuStore, type MenuItem } from '@/stores/menu'
 import { useSettingsStore } from '@/stores/settings'
+import { DEFAULT_ACCENT } from '@/stores/config'
 import { useNotificationStore } from '@/stores/notification'
 import { fetchNui } from '@/composables/useNui'
 
@@ -211,17 +212,17 @@ function executeSettingsAction(item: MenuItem) {
       }
       break
     case '_settings_notif_test':
-      notificationStore.addNotification('info', 'Test Notification', 'This is a test notification to preview the position.', 3000)
+      notificationStore.addNotification('info', 'Testmeldung', 'So sehen Meldungen an dieser Position aus.', 3000)
       break
     case '_settings_reset':
       // Perform the actual reset
       settingsStore.resetToDefaults()
       // Update menu items to reflect reset values
       menuStore.updateItem('_settings_position', { value: 'left' })
-      menuStore.updateItem('_settings_color', { value: '#3b82f6' })
+      menuStore.updateItem('_settings_color', { value: DEFAULT_ACCENT })
       menuStore.updateItem('_settings_notif_position', { value: 'top-right' })
       // Show success notification
-      notificationStore.addNotification('success', 'Settings Reset', 'All UI settings have been restored to defaults.', 3000)
+      notificationStore.addNotification('success', 'Zurückgesetzt', 'Position und Farbe stehen wieder auf Standard.', 3000)
       break
   }
 }
@@ -381,7 +382,7 @@ onUnmounted(() => {
 <template>
   <Transition name="menu">
     <div v-if="menuStore.isVisible" class="menu-container" :class="`position-${settingsStore.menuPosition}`">
-      <div class="menu">
+      <div class="menu glass">
         <div class="menu-header">
           <h2 class="menu-title">{{ menuStore.title }}</h2>
 
@@ -393,6 +394,7 @@ onUnmounted(() => {
             :key="item.id"
             class="menu-item"
             :class="{
+              'glass-active': index === menuStore.selectedIndex,
               selected: index === menuStore.selectedIndex,
               disabled: item.disabled,
               readonly: item.readonly
@@ -425,11 +427,7 @@ onUnmounted(() => {
               @blur="onInputBlur"
             />
             <!-- Checkbox -->
-            <div v-if="item.type === 'checkbox'" class="item-checkbox" :class="{ checked: item.checked }">
-              <svg v-if="item.checked" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
+            <div v-if="item.type === 'checkbox'" class="item-checkbox" :class="{ checked: item.checked }"></div>
             <!-- Select -->
             <div v-if="item.type === 'select'" class="item-select">
               <span
@@ -472,9 +470,9 @@ onUnmounted(() => {
 
         <div class="menu-footer">
           <span class="hint">
-            <kbd>↑</kbd><kbd>↓</kbd> Navigation
-            <kbd>Enter</kbd> Auswählen
-            <kbd>ESC</kbd> Schließen
+            <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> Navigation</span>
+            <span><kbd class="kbd">Enter</kbd> Auswählen</span>
+            <span><kbd class="kbd">ESC</kbd> Schließen</span>
           </span>
         </div>
       </div>
@@ -496,52 +494,47 @@ onUnmounted(() => {
 /* Position: Left (default) */
 .menu-container.position-left {
   justify-content: flex-start;
-  padding-left: 50px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  padding-left: 56px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 40%, transparent 70%);
 }
 
 /* Position: Center */
 .menu-container.position-center {
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.15) 70%);
 }
 
 /* Position: Right */
 .menu-container.position-right {
   justify-content: flex-end;
-  padding-right: 50px;
-  background: linear-gradient(270deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  padding-right: 56px;
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 40%, transparent 70%);
 }
 
 .menu {
   width: 400px;
   max-height: 80vh;
-  background: rgba(15, 15, 15, 0.95);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
+  padding: 10px;
   display: flex;
   flex-direction: column;
 }
 
 .menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 12px 14px;
 }
 
 .menu-title {
-  font-size: 1.25rem;
+  font-size: 17px;
   font-weight: 600;
-  color: #ffffff;
-  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .menu-items {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   overflow-y: auto;
 }
 
@@ -552,22 +545,19 @@ onUnmounted(() => {
 }
 
 .menu-item {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
-  transition: all 0.15s ease;
-  border-left: 3px solid transparent;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: var(--radius-ctl);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
 }
 
-.menu-item.selected {
-  border-left-color: var(--accent-color);
-  background: linear-gradient(90deg, rgba(var(--accent-rgb), 0.25) 0%, transparent 60%);
-}
-
 .menu-item.disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   pointer-events: none;
 }
 
@@ -576,121 +566,154 @@ onUnmounted(() => {
 }
 
 .item-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--fill-2);
   border-radius: 8px;
-  font-size: 1.25rem;
+  color: var(--text-2);
+  font-size: 14px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.menu-item.selected .item-icon {
+  background: var(--accent-color);
+  color: var(--on-accent);
 }
 
 .item-content {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .item-label {
-  font-size: 0.95rem;
+  font-size: 14px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--text);
 }
 
 .item-description {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.menu-item.selected .item-description {
+  color: var(--text-2);
 }
 
 .item-indicator {
-  color: rgba(255, 255, 255, 0.3);
-  transition: all 0.2s;
+  display: flex;
+  color: var(--text-3);
+  transition: transform 0.2s var(--ease), color 0.15s ease;
 }
 
 .menu-item.selected .item-indicator {
-  color: var(--accent-color);
-  transform: translateX(4px);
+  color: var(--text);
+  transform: translateX(3px);
 }
 
-/* Checkbox */
+/* Checkbox as switch */
 .item-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
+  position: relative;
+  width: 40px;
+  height: 24px;
   flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--fill-3);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease;
+}
+
+.item-checkbox::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s var(--ease);
 }
 
 .item-checkbox.checked {
   background: var(--accent-color);
-  border-color: var(--accent-color);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.item-checkbox svg {
-  color: #ffffff;
+.item-checkbox.checked::after {
+  transform: translateX(16px);
 }
 
-/* Select */
+/* Select as segmented control */
 .item-select {
   display: flex;
-  gap: 4px;
+  flex-shrink: 0;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--well);
+  box-shadow: var(--well-rim);
 }
 
 .select-option {
   padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.5);
-  transition: all 0.15s ease;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--text-3);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .select-option.active {
-  background: var(--accent-color);
-  color: #ffffff;
+  background: var(--fill-3);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* Number selector */
 .item-number {
   display: flex;
   align-items: center;
-  gap: 2px;
+  flex-shrink: 0;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--well);
+  box-shadow: var(--well-rim);
 }
 
 .number-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: all 0.15s ease;
+  width: 26px;
+  height: 26px;
   padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .number-arrow:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--accent-color);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--fill-3);
+  color: var(--text);
 }
 
 .number-value {
-  min-width: 36px;
+  min-width: 34px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--accent-color);
-  padding: 4px 6px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
 }
 
 /* Input */
@@ -699,26 +722,27 @@ onUnmounted(() => {
 }
 
 .item-input {
-  width: 120px;
+  width: 130px;
+  height: 30px;
   margin-left: auto;
-  padding: 4px 0;
-  background: transparent;
+  padding: 0 10px;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-family: inherit;
+  border-radius: 8px;
+  background: var(--well);
+  box-shadow: var(--well-rim);
+  color: var(--text);
+  font-size: 13px;
   outline: none;
-  transition: border-color 0.15s ease;
   text-align: right;
+  transition: box-shadow 0.15s ease;
 }
 
 .item-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-3);
 }
 
 .item-input:focus {
-  border-bottom-color: var(--accent-color);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--accent-color);
 }
 
 .item-input:disabled {
@@ -727,26 +751,21 @@ onUnmounted(() => {
 }
 
 .menu-footer {
-  padding: 12px 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.3);
+  margin-top: 8px;
+  padding: 12px 12px 4px;
+  border-top: 1px solid var(--divider);
 }
 
 .hint {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
+  font-size: 11.5px;
+  color: var(--text-3);
 }
 
-kbd {
-  padding: 2px 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 0.7rem;
-  margin-right: 2px;
+.hint .kbd {
+  margin-right: 3px;
 }
 
 /* Transitions */
@@ -760,7 +779,7 @@ kbd {
 
 .menu-enter-active .menu,
 .menu-leave-active .menu {
-  transition: transform 0.25s ease-out, opacity 0.25s ease-out;
+  transition: transform 0.3s var(--ease), opacity 0.25s ease-out;
 }
 
 .menu-enter-from,
@@ -778,7 +797,7 @@ kbd {
 /* Center position animation */
 .position-center.menu-enter-from .menu,
 .position-center.menu-leave-to .menu {
-  transform: scale(0.9);
+  transform: scale(0.94);
   opacity: 0;
 }
 

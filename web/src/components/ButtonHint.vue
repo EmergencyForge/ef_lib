@@ -25,7 +25,7 @@ const isHorizontal = computed(() =>
         <div
           v-for="hint in hintStore.hints"
           :key="hint.id || hint.key"
-          class="hint-item"
+          class="hint-item glass"
         >
           <div v-if="hint.icon" class="hint-badge hint-icon">
             <i :class="resolveIconClass(hint.icon)"></i>
@@ -107,38 +107,35 @@ const isHorizontal = computed(() =>
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7));
+  padding: 5px 14px 5px 5px;
+  border-radius: var(--radius-pill);
 }
 
 .hint-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 8px;
-  background: rgba(0, 0, 0, 0.6);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: #ffffff;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: var(--radius-pill);
 }
 
 .hint-key {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--on-accent);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
 }
 
 .hint-icon {
-  font-size: 14px;
-  line-height: 1;
+  background: rgba(var(--accent-rgb), 0.2);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4);
   color: var(--accent-color);
+  font-size: 13px;
+  line-height: 1;
 }
 
 .hint-icon i {
@@ -147,18 +144,16 @@ const isHorizontal = computed(() =>
 }
 
 .hint-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: -0.005em;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
   white-space: nowrap;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 1px rgba(0, 0, 0, 0.9);
 }
 
 /* ─── Container Transitions ─── */
 .hints-container-enter-active,
 .hints-container-leave-active {
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s ease, transform 0.35s var(--ease);
 }
 
 .pos-bottom-center.hints-container-enter-from,
@@ -192,20 +187,16 @@ const isHorizontal = computed(() =>
 /* ─── Item Transitions ─── */
 .hint-enter-active,
 .hint-leave-active {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.25s ease, transform 0.3s var(--ease);
 }
 
-.hint-enter-from {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
+.hint-enter-from,
 .hint-leave-to {
   opacity: 0;
   transform: scale(0.95);
 }
 
 .hint-move {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s var(--ease);
 }
 </style>

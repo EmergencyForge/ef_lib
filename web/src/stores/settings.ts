@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { useConfigStore } from './config'
+import { useConfigStore, DEFAULT_ACCENT } from './config'
 
 export type MenuPosition = 'left' | 'center' | 'right'
 export type NotificationPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
@@ -20,7 +20,7 @@ function loadSettings(): StoredSettings {
       const parsed = JSON.parse(stored)
       return {
         menuPosition: parsed.menuPosition || 'left',
-        accentColor: parsed.accentColor || '#3b82f6',
+        accentColor: parsed.accentColor || DEFAULT_ACCENT,
         notificationPosition: parsed.notificationPosition || 'top-right'
       }
     }
@@ -29,7 +29,7 @@ function loadSettings(): StoredSettings {
   }
   return {
     menuPosition: 'left',
-    accentColor: '#3b82f6',
+    accentColor: DEFAULT_ACCENT,
     notificationPosition: 'top-right'
   }
 }
@@ -78,9 +78,9 @@ export const useSettingsStore = defineStore('settings', () => {
 
   function resetToDefaults() {
     menuPosition.value = 'left'
-    accentColor.value = '#3b82f6'
+    accentColor.value = DEFAULT_ACCENT
     notificationPosition.value = 'top-right'
-    configStore.setAccentColor('#3b82f6')
+    configStore.setAccentColor(DEFAULT_ACCENT)
   }
 
   return {
