@@ -558,7 +558,7 @@ exports.ef_lib:HideHint(id)
 exports.ef_lib:HideAllHints()
 
 -- Minigames
-exports.ef_lib:Minigame(gameType, difficulty, retries)
+exports.ef_lib:Minigame(gameType, difficulty, retries)   -- difficulty darf auch eine Options-Tabelle sein; gibt success, result zurück
 
 -- ProgressBar
 exports.ef_lib:ProgressBar(data)                    -- Fortschrittsanzeige → boolean
@@ -620,94 +620,97 @@ ef_lib/
 
 ## Minigame System
 
-Das Minigame-System bietet drei integrierte Minispiele die als Skill-Checks genutzt werden können. Alle blockieren den aktuellen Thread und geben `true` (Erfolg) oder `false` (Fehlgeschlagen) zurück.
+Vier Minispiele als Skill-Checks. Der Aufruf blockiert den aktuellen Thread und gibt zwei Werte zurück: `true` oder `false` und eine Tabelle mit Details.
 
 ### Grundnutzung
 
 ```lua
--- Einfacher Aufruf
-local success = exports.ef_lib:Minigame('lockpick', 'medium')
+local success, result = exports.ef_lib:Minigame('lockpick', 'medium')
 
 if success then
-    -- Spieler hat es geschafft
-else
-    -- Spieler hat versagt
+    print(('Geschafft in %.1f s mit %d Fehlversuchen'):format(result.time, result.misses))
 end
 ```
+
+`result` enthält `success`, `time` (Sekunden bis zum Ende) und `misses` (Fehlversuche). Damit lassen sich Ergebnisse abstufen, etwa eine Wunde, die bei vielen Fehlversuchen nur halb versorgt ist.
 
 ### Parameter
 
 | Parameter | Typ | Pflicht | Beschreibung |
 |-----------|-----|---------|-------------|
-| `gameType` | string | ✅ | `'lockpick'`, `'safedial'` oder `'reactionchain'` |
-| `difficulty` | string | ❌ | `'easy'`, `'medium'`, `'hard'` oder `'extreme'` (Standard: `'medium'`) |
-| `retries` | number | ❌ | Eigene Anzahl Versuche (überschreibt Standard der Schwierigkeit) |
+| `gameType` | string | ja | `'lockpick'`, `'safedial'`, `'reactionchain'` oder `'wires'` |
+| `difficulty` | string oder table | nein | `'easy'`, `'medium'`, `'hard'`, `'extreme'` (Standard `'medium'`), oder eine Options-Tabelle |
+| `retries` | number | nein | Eigene Anzahl Versuche, nur wenn `difficulty` ein String ist |
 
-### Verfügbare Minigames
-
-#### 🔐 Lockpick (Pin-Tumbler Schloss)
-Pins bewegen sich auf und ab. Spieler drückt `SPACE` wenn der Pin in der grünen Zone (Scherlinie) ist.
+Mit einer Options-Tabelle lässt sich jeder Wert der Schwierigkeitsstufe einzeln überschreiben. Unbekannte Schlüssel und falsche Typen werden ignoriert.
 
 ```lua
-local success = exports.ef_lib:Minigame('lockpick', 'hard')
+local success = exports.ef_lib:Minigame('lockpick', {
+    difficulty = 'hard',
+    time = 60,      -- Sekunden
+    retries = 5,
+    pins = 4,
+    sound = false,  -- Klänge aus
+})
 ```
 
-| Schwierigkeit | Pins | Zone | Zeit | Versuche |
-|---------------|------|------|------|----------|
-| easy | 3 | groß | 30s | 4 |
-| medium | 5 | mittel | 20s | 3 |
-| hard | 6 | klein | 15s | 2 |
-| extreme | 7 | winzig | 10s | 1 |
+Für alle Spiele gelten `difficulty`, `time`, `retries` und `sound` (Standard `true`).
 
-**Ideal für:** Schlösser knacken, Fahrzeuge aufbrechen, Türen öffnen
+Ein Fehlversuch kostet einen Versuch, der Fortschritt bleibt. Sind alle Versuche aufgebraucht oder ist die Zeit um, endet das Spiel als Fehlschlag. `ESC` bricht ab.
 
-#### 🔐 Safe Dial (Kombinations-Tresor)
-Drehrad mit Zahlen. Spieler dreht mit `A`/`D` und bestätigt mit `SPACE` bei der richtigen Zahl. Mehrere Codes hintereinander, Richtung wechselt (links/rechts).
+### Schloss knacken (`lockpick`)
+
+Maustaste oder `W` gedrückt halten erzeugt Spannung. Jeder Pin setzt sich mit `SPACE` nur, wenn er in der grünen Zone ist und die Spannung im markierten Bereich liegt. Mit der richtigen Spannung wird der aktive Pin langsamer. Zu viel Spannung lässt den Pick abrutschen, dann fällt der zuletzt gesetzte Pin zurück.
+
+| Schwierigkeit | `pins` | `zone` (px) | `speed` | `tension` (Breite) | `time` | `retries` |
+|---|---|---|---|---|---|---|
+| easy | 3 | 56 | 1.3 | 0.34 | 40 | 4 |
+| medium | 5 | 42 | 1.8 | 0.26 | 35 | 3 |
+| hard | 6 | 32 | 2.4 | 0.2 | 30 | 2 |
+| extreme | 7 | 24 | 3.0 | 0.15 | 25 | 1 |
+
+### Tresor öffnen (`safedial`)
+
+Drehen mit `A`/`D` oder dem Mausrad, prüfen mit `SPACE`. Die Kombination ist versteckt. In der richtigen Drehrichtung wird das Rad nahe der richtigen Zahl schwerer, leuchtet auf und klickt hörbar. Die Richtung wechselt pro Zahl, begonnen wird rechts herum.
+
+Kennt der Spieler die Kombination, etwa von einem gefundenen Zettel, gibt das Script sie mit `code` mit. Sie steht dann als Notiz im Spiel.
 
 ```lua
-local success = exports.ef_lib:Minigame('safedial', 'medium')
+exports.ef_lib:Minigame('safedial', { difficulty = 'medium', code = { 12, 5, 27 } })
 ```
 
-| Schwierigkeit | Codes | Toleranz | Zeit | Versuche |
-|---------------|-------|----------|------|----------|
-| easy | 2 | ±4 | 30s | 4 |
-| medium | 3 | ±3 | 20s | 3 |
-| hard | 4 | ±2 | 15s | 2 |
-| extreme | 5 | ±1 | 10s | 1 |
+| Schwierigkeit | `codes` | `tolerance` (±) | `numbers` | `time` | `retries` |
+|---|---|---|---|---|---|
+| easy | 2 | 1 | 20 | 45 | 4 |
+| medium | 3 | 1 | 30 | 45 | 3 |
+| hard | 3 | 0 | 40 | 40 | 2 |
+| extreme | 4 | 0 | 50 | 40 | 1 |
 
-**Ideal für:** Tresore, Safes, Schließfächer, Waffenschränke
+### Reaktionskette (`reactionchain`)
 
-#### ⚡ Reaction Chain (Reaktionstest)
-Farbige Felder leuchten zufällig auf. Spieler drückt `1`/`2`/`3`/`4` bevor die Zeit abläuft. Wird schneller mit jedem Treffer.
+Um ein Feld zieht sich ein Ring zusammen. Die Taste des Felds drücken, wenn der Ring den Rand trifft. Jedes Feld hat ein eigenes Symbol. Die Tasten sind frei wählbar, zwei bis sechs Stück.
 
 ```lua
-local success = exports.ef_lib:Minigame('reactionchain', 'hard')
+exports.ef_lib:Minigame('reactionchain', { difficulty = 'medium', keys = { 'W', 'A', 'S', 'D' } })
 ```
 
-| Schwierigkeit | Kette | Reaktion | Zeit | Versuche | Tasten |
-|---------------|-------|----------|------|----------|--------|
-| easy | 6 | 1200ms | 30s | 4 | 3 |
-| medium | 8 | 900ms | 20s | 3 | 4 |
-| hard | 12 | 700ms | 15s | 2 | 4 |
-| extreme | 16 | 550ms | 10s | 1 | 4 |
+| Schwierigkeit | `notes` (Treffer) | `approach` (ms) | `window` (± ms) | `interval` (ms) | `keys` | `time` | `retries` |
+|---|---|---|---|---|---|---|---|
+| easy | 8 | 1400 | 220 | 900 | 1 2 3 | 40 | 4 |
+| medium | 12 | 1150 | 180 | 700 | 1 2 3 4 | 35 | 3 |
+| hard | 16 | 950 | 150 | 520 | 1 2 3 4 | 30 | 2 |
+| extreme | 20 | 800 | 120 | 420 | 1 2 3 4 | 28 | 1 |
 
-**Ideal für:** CPR/Wiederbelebung, Reparaturen, Bomben entschärfen, Hacking
+### Kabel verbinden (`wires`)
 
-### Custom Retries
+Jedes Kabel links mit der Maus zum passenden Anschluss rechts ziehen. Ab `hard` zeigt die rechte Seite nur Symbole, keine Farben.
 
-Alle Minigames unterstützen eine optionale Anzahl eigener Versuche:
-
-```lua
--- Lockpicking mit 5 Versuchen statt dem Standard
-local success = exports.ef_lib:Minigame('lockpick', 'hard', 5)
-
--- Safe mit nur 1 Versuch auf mittlerer Schwierigkeit
-local success = exports.ef_lib:Minigame('safedial', 'medium', 1)
-```
-
-### Retry-System
-
-Bei einem Fehlversuch werden alle Fortschritte (Pins, Codes, Kette) zurückgesetzt, aber der **Timer läuft weiter**. Sind alle Versuche aufgebraucht, endet das Spiel sofort als Fehlschlag.
+| Schwierigkeit | `wires` | `symbolsOnly` | `time` | `retries` |
+|---|---|---|---|---|
+| easy | 4 | false | 30 | 4 |
+| medium | 5 | false | 25 | 3 |
+| hard | 6 | true | 25 | 2 |
+| extreme | 8 | true | 25 | 1 |
 
 ### Praxisbeispiele
 
@@ -722,21 +725,14 @@ RegisterCommand('lockpick', function()
     end
 end)
 
--- Tresor knacken
-RegisterCommand('safecrack', function()
-    local success = exports.ef_lib:Minigame('safedial', 'extreme')
-    if success then
-        TriggerServerEvent('safe:opened', safeId)
-    end
-end)
+-- Tresor mit bekanntem Code aus einem Item
+local success = exports.ef_lib:Minigame('safedial', { difficulty = 'hard', code = noteItem.metadata.code })
 
--- Wiederbelebung
-RegisterCommand('cpr', function()
-    local success = exports.ef_lib:Minigame('reactionchain', 'medium')
-    if success then
-        TriggerServerEvent('medical:revive', targetId)
-    end
-end)
+-- Stromkasten reparieren, Qualität nach Fehlversuchen
+local success, result = exports.ef_lib:Minigame('wires', 'medium')
+if success then
+    TriggerServerEvent('power:repaired', result.misses == 0 and 'sauber' or 'provisorisch')
+end
 ```
 
 ---

@@ -968,26 +968,38 @@ end)
 -----------------------
 
 --- Open a minigame and wait for the result (blocks current thread)
---- @param gameType string 'lockpick' | 'safedial' | 'reactionchain'
---- @param difficulty? string 'easy' | 'medium' | 'hard' | 'extreme' (default: 'medium')
+--- @param gameType string 'lockpick' | 'safedial' | 'reactionchain' | 'wires'
+--- @param difficulty? string|table 'easy' | 'medium' | 'hard' | 'extreme' (default: 'medium'),
+---   or an options table: { difficulty, retries, time, sound, ... } plus game parameters (see DOCUMENTATION.md)
 --- @param retries? number Custom number of retries (overrides difficulty default)
 --- @return boolean success Whether the player completed the minigame
+--- @return table details { success, time = seconds, misses }
 local function Minigame(gameType, difficulty, retries)
     if minigamePromise then
         print('^3[EF_LIB] Minigame: Another minigame is already open^0')
-        return false
+        return false, { success = false }
     end
 
     if type(gameType) ~= 'string' then
         print('^1[EF_LIB] Minigame: gameType must be a string^0')
-        return false
+        return false, { success = false }
     end
 
-    local validTypes = { lockpick = true, safedial = true, reactionchain = true }
+    local validTypes = { lockpick = true, safedial = true, reactionchain = true, wires = true }
     if not validTypes[gameType] then
-        print('^1[EF_LIB] Minigame: Invalid gameType "' .. tostring(gameType) .. '". Use: lockpick, safedial, reactionchain^0')
-        return false
+        print('^1[EF_LIB] Minigame: Invalid gameType "' .. tostring(gameType) .. '". Use: lockpick, safedial, reactionchain, wires^0')
+        return false, { success = false }
     end
+
+    -- Copy, so the caller's options table is not changed
+    local data = {}
+    if type(difficulty) == 'table' then
+        for k, v in pairs(difficulty) do data[k] = v end
+    else
+        data.difficulty, data.retries = difficulty, retries
+    end
+    data.type = gameType
+    data.difficulty = data.difficulty or 'medium'
 
     minigamePromise = promise.new()
 
@@ -998,11 +1010,7 @@ local function Minigame(gameType, difficulty, retries)
     PushScreenBlur()
     SendNUIMessage({
         action = 'openMinigame',
-        data = {
-            type = gameType,
-            difficulty = difficulty or 'medium',
-            retries = retries or nil,
-        }
+        data = data
     })
 
     local result = Citizen.Await(minigamePromise)
@@ -1017,13 +1025,13 @@ local function Minigame(gameType, difficulty, retries)
         SetNuiFocusKeepInput(false)
     end
 
-    return result == true
+    return result.success, result
 end
 
 -- NUI Callback: receives result from Minigame Vue component
 RegisterNUICallback('minigameResult', function(data, cb)
     if minigamePromise then
-        minigamePromise:resolve(data.success == true)
+        minigamePromise:resolve({ success = data.success == true, time = data.time, misses = data.misses })
     end
     cb('ok')
 end)

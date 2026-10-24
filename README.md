@@ -16,7 +16,7 @@ Das Projekt wird hobbymäßig von **EmergencyForge** entwickelt und ist für jeg
 - **Dialogsystem** - Input-Dialoge mit verschiedenen Feldtypen (Input, Number, Checkbox, Select, Slider, Textarea) sowie Alert-Dialoge
 - **Callback-System** - Synchrone & asynchrone Client-Server-Kommunikation mit automatischem Timeout und Cleanup
 - **Benachrichtigungen** - Toast-Notifications mit den Typen: Success, Error, Warning & Info
-- **Minispiele** - Drei integrierte Skillchecks: Lockpick, Tresor-Dial & Reaction Chain mit konfigurierbaren Schwierigkeitsgraden
+- **Minispiele** - Vier Skillchecks: Schloss knacken mit Spannung, Tresor mit verstecktem Code, Reaktionskette und Kabel verbinden. Vier Stufen oder eigene Werte, Klänge und Ergebnis mit Zeit und Fehlversuchen
 - **Progressbar** - Fortschrittsanzeige mit Animationen, Prop-Attachment und Steuerungssperren
 - **Zonen** - Sphere- und Box-Zonen mit onEnter, onExit & inside-Callbacks
 - **Button Hints** - Interaktive Tastaturhinweise (z. B. E, F)
