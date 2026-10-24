@@ -166,9 +166,10 @@ function onOverlayClick(e: MouseEvent) {
 function flashContainer() {
   const el = document.querySelector('.mg-container') as HTMLElement
   if (!el) return
-  el.style.outline = '2px solid #f87171'
-  el.style.outlineOffset = '-2px'
-  setTimeout(() => { el.style.outline = 'none' }, 350)
+  // Restart the shake even if the last one is still running
+  el.classList.remove('shake')
+  void el.offsetWidth
+  el.classList.add('shake')
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -619,37 +620,24 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Transition name="mg">
+  <Transition name="mg" :duration="{ enter: 900, leave: 220 }">
     <div v-if="store.visible" class="mg-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
-      <div class="mg-container glass">
+      <div class="mg-container">
 
-        <!-- ── HEADER ── -->
-        <div class="mg-header">
-          <div class="mg-brand">
-            <div class="mg-icon">
-              <svg v-if="store.gameType === 'lockpick'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <svg v-if="store.gameType === 'safedial'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
-              <svg v-if="store.gameType === 'reactionchain'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </div>
-            <div>
-              <div class="mg-title">{{ store.typeLabel.title }}</div>
-              <div class="mg-subtitle">{{ store.typeLabel.subtitle }}</div>
-            </div>
-          </div>
-          <div class="mg-stats">
-            <div class="mg-stat">
-              <div class="mg-stat-label">Versuche</div>
-              <div class="mg-stat-value" :class="{ warn: retriesWarn }">{{ retriesLeft }}</div>
-            </div>
-            <div class="mg-stat">
-              <div class="mg-stat-label">Zeit</div>
-              <div class="mg-stat-value" :class="{ warn: timerWarn }">{{ timeLeft.toFixed(1) }}s</div>
-            </div>
+        <!-- ── TOP: time, title, attempts ── -->
+        <div class="mg-top mg-stagger" style="--i: 0">
+          <div class="mg-timer" :class="{ warn: timerWarn }">{{ timeLeft.toFixed(1) }}<small> s</small></div>
+          <div class="mg-meta">
+            <span class="mg-title">{{ store.typeLabel.title }}</span>
+            <span class="mg-attempts" :class="{ warn: retriesWarn }">
+              <template v-if="maxRetries <= 8"><i v-for="n in maxRetries" :key="n" :class="{ off: n > retriesLeft }"></i></template>
+              <template v-else>{{ retriesLeft }} Versuche</template>
+            </span>
           </div>
         </div>
 
         <!-- ══════════ LOCKPICK ══════════ -->
-        <div v-if="store.gameType === 'lockpick'" class="mg-body" @click="onClickLockpick">
+        <div v-if="store.gameType === 'lockpick'" class="mg-body mg-stagger" style="--i: 1" @click="onClickLockpick">
           <div class="lp-area">
             <!-- Shear line -->
             <div class="lp-shear" :style="{ top: (CHANNEL_HEIGHT * 0.5) + 'px' }">
@@ -675,7 +663,7 @@ onUnmounted(() => {
         </div>
 
         <!-- ══════════ SAFEDIAL ══════════ -->
-        <div v-if="store.gameType === 'safedial'" class="mg-body sd-body">
+        <div v-if="store.gameType === 'safedial'" class="mg-body sd-body mg-stagger" style="--i: 1">
           <!-- Direction -->
           <div class="sd-direction" :class="{ left: sdDirections[sdCurrentCode] === -1, right: sdDirections[sdCurrentCode] === 1 }">
             <i :class="sdDirections[sdCurrentCode] === -1 ? 'fa-solid fa-rotate-left' : 'fa-solid fa-rotate-right'"></i>
@@ -696,7 +684,7 @@ onUnmounted(() => {
         </div>
 
         <!-- ══════════ REACTION CHAIN ══════════ -->
-        <div v-if="store.gameType === 'reactionchain'" class="mg-body rc-body">
+        <div v-if="store.gameType === 'reactionchain'" class="mg-body rc-body mg-stagger" style="--i: 1">
           <!-- Keys -->
           <div class="rc-grid">
             <div
@@ -729,8 +717,8 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- ── FOOTER ── -->
-        <div class="mg-footer">
+        <!-- ── PROGRESS ── -->
+        <div class="mg-bottom mg-stagger" style="--i: 2">
           <div class="mg-progress-track">
             <div class="mg-progress-fill" :style="{
               width: (store.gameType === 'lockpick' ? lpProgress : store.gameType === 'safedial' ? sdProgress : rcProgress) + '%'
@@ -755,7 +743,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Controls hint below card -->
-      <div class="mg-controls">
+      <div class="mg-controls mg-stagger" style="--i: 3">
         <template v-if="store.gameType === 'lockpick'">
           <span class="mg-ctrl"><kbd class="kbd">SPACE</kbd> Pin fixieren</span>
           <span class="mg-ctrl-sep">·</span>
@@ -777,6 +765,8 @@ onUnmounted(() => {
 <style scoped>
 /* ══════════════════════════════════════════════════════════════
    SHARED LAYOUT
+   No card: the game floats over the (Lua-blurred) game world, so the
+   scrim carries readability when Config.ScreenBlur is off.
    ══════════════════════════════════════════════════════════════ */
 
 .mg-overlay {
@@ -786,98 +776,122 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 18px;
   z-index: 1200;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.55));
+  background: radial-gradient(60% 70% at 50% 50%, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.35));
 }
 
 .mg-container {
-  width: 540px;
-  padding: 8px;
-  overflow: hidden;
-  outline: none;
-  transition: outline 0.15s ease;
-}
-
-/* ── Header ── */
-.mg-header {
+  position: relative;
+  width: 560px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 12px 14px;
+  gap: 18px;
 }
 
-.mg-brand { display: flex; align-items: center; gap: 12px; }
-
-.mg-icon {
-  width: 38px; height: 38px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
-  background: rgba(var(--accent-rgb), 0.18);
-  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  color: var(--accent-color);
+.mg-container.shake {
+  animation: shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
-.mg-title {
-  font-size: 16px; font-weight: 600; color: var(--text);
-  letter-spacing: -0.01em;
+@keyframes shake {
+  15%, 85% { transform: translateX(-3px); }
+  30%, 70% { transform: translateX(6px); }
+  45% { transform: translateX(-8px); }
+  60% { transform: translateX(8px); }
 }
 
-.mg-subtitle {
-  font-size: 12px; color: var(--text-3); margin-top: 1px;
+/* Children enter one after another */
+.mg-stagger {
+  transition: opacity 0.4s ease, transform 0.7s var(--spring), filter 0.4s ease;
+  transition-delay: calc(var(--i) * 70ms);
 }
 
-.mg-stats { display: flex; gap: 8px; }
-
-.mg-stat {
-  min-width: 72px;
-  padding: 6px 12px;
-  border-radius: var(--radius-ctl);
-  background: var(--well);
-  box-shadow: var(--well-rim);
-  text-align: right;
+/* ── Top: big time, title, attempts ── */
+.mg-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-.mg-stat-label {
-  font-size: 11px;
+.mg-timer {
+  font-size: 64px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
+  transition: color 0.3s ease;
+}
+
+.mg-timer small {
+  font-size: 24px;
   color: var(--text-3);
 }
 
-.mg-stat-value {
-  font-size: 17px; font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.mg-stat-value.warn {
+.mg-timer.warn {
   color: var(--danger);
   animation: statPulse 0.6s ease-in-out infinite alternate;
 }
 
-@keyframes statPulse { to { opacity: 0.5; } }
+@keyframes statPulse { to { opacity: 0.55; } }
+
+.mg-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.mg-attempts {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mg-attempts i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.7);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.4s var(--spring);
+}
+
+.mg-attempts i.off {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  transform: scale(0.8);
+}
+
+.mg-attempts.warn i:not(.off) {
+  background: var(--danger);
+  box-shadow: 0 0 6px rgba(var(--danger-rgb), 0.7);
+}
 
 /* ── Body ── */
 .mg-body {
-  margin: 0 4px;
-  padding: 20px;
   min-height: 200px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
-/* ── Footer ── */
-.mg-footer {
-  display: flex; align-items: center;
-  padding: 14px 12px 6px;
-  gap: 16px;
+/* ── Progress ── */
+.mg-bottom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 320px;
 }
 
 .mg-progress-track {
-  flex: 1; height: 6px;
+  flex: 1;
+  height: 4px;
   border-radius: var(--radius-pill);
-  background: var(--well);
-  box-shadow: var(--well-rim);
+  background: rgba(255, 255, 255, 0.12);
   overflow: hidden;
 }
 
@@ -885,13 +899,13 @@ onUnmounted(() => {
   height: 100%;
   border-radius: inherit;
   background: var(--accent-color);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 60%);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.5);
-  transition: width 0.3s var(--ease);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+  transition: width 0.4s var(--ease);
 }
 
 .mg-progress-label {
-  font-size: 12px; font-weight: 500;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -915,43 +929,42 @@ onUnmounted(() => {
 
 .mg-ctrl-sep { color: var(--text-3); }
 
-/* ── Result Overlay ── */
+/* ── Result ── */
 .mg-result {
-  position: absolute; inset: 0;
+  position: absolute;
+  inset: -24px;
   display: flex; align-items: center; justify-content: center;
   z-index: 10;
-  border-radius: inherit;
-  /* Blurs the card itself, which is inside the NUI page and therefore works */
-  backdrop-filter: blur(8px);
+  border-radius: 28px;
+  /* Blurs the game UI underneath, which is inside the NUI page and therefore works */
+  backdrop-filter: blur(12px);
+  background: rgba(8, 8, 10, 0.45);
 }
-
-.mg-result.success { background: rgba(10, 30, 16, 0.55); }
-.mg-result.fail { background: rgba(36, 12, 12, 0.55); }
 
 .mg-result-content { text-align: center; }
 
 .mg-result-icon {
-  width: 64px; height: 64px;
-  margin: 0 auto 12px;
+  width: 72px; height: 72px;
+  margin: 0 auto 14px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .mg-result.success .mg-result-icon {
   color: var(--ok);
   background: rgba(var(--ok-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.4), 0 0 32px rgba(var(--ok-rgb), 0.25);
+  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.4), 0 0 40px rgba(var(--ok-rgb), 0.3);
 }
 
 .mg-result.fail .mg-result-icon {
   color: var(--danger);
   background: rgba(var(--danger-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--danger-rgb), 0.4), 0 0 32px rgba(var(--danger-rgb), 0.25);
+  box-shadow: inset 0 0 0 1px rgba(var(--danger-rgb), 0.4), 0 0 40px rgba(var(--danger-rgb), 0.3);
 }
 
 .mg-result-text {
-  font-size: 20px; font-weight: 600; letter-spacing: -0.01em;
+  font-size: 24px; font-weight: 600; letter-spacing: -0.01em;
 }
 
 .mg-result.success .mg-result-text { color: var(--ok); }
@@ -978,8 +991,8 @@ onUnmounted(() => {
 }
 
 .lp-shear-label {
-  position: absolute; right: 4px; top: -16px;
-  font-size: 11px; font-weight: 500;
+  position: absolute; left: calc(100% + 10px); top: -8px;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
   color: var(--accent-color); opacity: 0.8;
 }
 
@@ -1248,21 +1261,21 @@ onUnmounted(() => {
    TRANSITIONS
    ══════════════════════════════════════════════════════════════ */
 
-.mg-enter-active { transition: opacity 0.25s ease-out; }
-.mg-leave-active { transition: opacity 0.2s ease-in; }
+.mg-enter-active { transition: opacity 0.3s ease; }
+.mg-leave-active { transition: opacity 0.22s var(--exit); }
 .mg-enter-from, .mg-leave-to { opacity: 0; }
 
-.mg-enter-active .mg-container { transition: transform 0.3s var(--ease), opacity 0.25s ease-out; }
-.mg-leave-active .mg-container { transition: transform 0.2s ease-in, opacity 0.2s ease-in; }
-.mg-enter-from .mg-container, .mg-leave-to .mg-container { transform: scale(0.94); opacity: 0; }
+.mg-enter-from .mg-stagger { opacity: 0; transform: translateY(14px) scale(0.96); filter: blur(6px); }
+.mg-leave-active .mg-stagger { transition: opacity 0.2s var(--exit), transform 0.22s var(--exit); transition-delay: 0s; }
+.mg-leave-to .mg-stagger { opacity: 0; transform: scale(0.98); }
 
-.result-enter-active { transition: opacity 0.2s ease-out; }
-.result-enter-active .mg-result-content { animation: resultPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.result-enter-active { transition: opacity 0.25s ease-out; }
+.result-enter-active .mg-result-content { animation: resultPop 0.5s var(--spring); }
 .result-leave-active { transition: opacity 0.15s ease-in; }
 .result-enter-from, .result-leave-to { opacity: 0; }
 
 @keyframes resultPop {
-  from { opacity: 0; transform: scale(0.5) translateY(10px); }
+  from { opacity: 0; transform: scale(0.6) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 </style>

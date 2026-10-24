@@ -106,7 +106,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Transition name="dialog">
+  <Transition name="dialog" :duration="{ enter: 550, leave: 180 }">
     <div v-if="dialogStore.inputDialogVisible" class="dialog-overlay" ref="containerRef" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
       <div class="dialog-modal glass">
         <!-- Header -->
@@ -527,19 +527,19 @@ onUnmounted(() => {
 /* ─── Transitions ─── */
 
 .dialog-enter-active {
-  transition: opacity 0.2s ease-out;
+  transition: opacity 0.25s ease-out;
 }
 
 .dialog-leave-active {
-  transition: opacity 0.15s ease-in;
+  transition: opacity 0.18s var(--exit);
 }
 
 .dialog-enter-active .dialog-modal {
-  transition: transform 0.3s var(--ease), opacity 0.2s ease-out;
+  transition: transform 0.55s var(--spring), opacity 0.25s ease-out, filter 0.3s ease;
 }
 
 .dialog-leave-active .dialog-modal {
-  transition: transform 0.15s ease-in, opacity 0.15s ease-in;
+  transition: transform 0.18s var(--exit), opacity 0.16s var(--exit);
 }
 
 .dialog-enter-from,
@@ -547,9 +547,14 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.dialog-enter-from .dialog-modal,
+.dialog-enter-from .dialog-modal {
+  transform: scale(0.92) translateY(8px);
+  opacity: 0;
+  filter: blur(6px);
+}
+
 .dialog-leave-to .dialog-modal {
-  transform: scale(0.94);
+  transform: scale(0.97);
   opacity: 0;
 }
 </style>

@@ -21,11 +21,11 @@ const isHorizontal = computed(() =>
 <template>
   <Transition name="hints-container">
     <div v-if="hintStore.hints.length > 0" class="hints-container" :class="positionClass">
-      <TransitionGroup name="hint" tag="div" class="hints-list" :class="{ horizontal: isHorizontal, vertical: !isHorizontal }">
+      <TransitionGroup name="hint" tag="div" class="hints-list glass" :class="{ horizontal: isHorizontal, vertical: !isHorizontal }">
         <div
           v-for="hint in hintStore.hints"
           :key="hint.id || hint.key"
-          class="hint-item glass"
+          class="hint-item"
         >
           <div v-if="hint.icon" class="hint-badge hint-icon">
             <i :class="resolveIconClass(hint.icon)"></i>
@@ -80,62 +80,66 @@ const isHorizontal = computed(() =>
   right: 40px;
 }
 
-/* ─── Layout ─── */
-.hints-list.horizontal {
+/* ─── One glass bar, hints are its segments ─── */
+.hints-list {
   display: flex;
+  padding: 5px;
+  border-radius: 23px;
+}
+
+.hints-list.horizontal {
   flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
-  justify-content: center;
 }
 
 .hints-list.vertical {
-  display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  align-items: stretch;
+  border-radius: 18px;
 }
 
-.pos-bottom-right .hints-list.vertical,
-.pos-top-right .hints-list.vertical {
-  align-items: flex-end;
-}
-
-/* ─── Items ─── */
 .hint-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 5px 14px 5px 5px;
-  border-radius: var(--radius-pill);
+  gap: 9px;
+  height: 36px;
+  padding: 0 14px 0 6px;
+  white-space: nowrap;
+}
+
+.horizontal .hint-item + .hint-item {
+  border-left: 1px solid var(--divider);
+  padding-left: 14px;
+}
+
+.vertical .hint-item + .hint-item {
+  border-top: 1px solid var(--divider);
 }
 
 .hint-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 9px;
-  border-radius: var(--radius-pill);
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .hint-key {
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--on-accent);
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15);
-  font-size: 12px;
-  font-weight: 700;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 0 rgba(0, 0, 0, 0.35);
+  color: var(--text);
   text-transform: uppercase;
 }
 
 .hint-icon {
-  background: rgba(var(--accent-rgb), 0.2);
-  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.25);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.35);
   color: var(--accent-color);
-  font-size: 13px;
-  line-height: 1;
 }
 
 .hint-icon i {
@@ -147,56 +151,65 @@ const isHorizontal = computed(() =>
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
-  white-space: nowrap;
 }
 
-/* ─── Container Transitions ─── */
+/* ─── Container: the bar opens from its centre ─── */
 .hints-container-enter-active,
 .hints-container-leave-active {
-  transition: opacity 0.3s ease, transform 0.35s var(--ease);
+  transition: opacity 0.6s ease, transform 0.6s var(--ease);
+}
+
+.hints-container-leave-active {
+  transition-duration: 0.25s;
+  transition-timing-function: var(--exit);
+}
+
+.hints-container-enter-active .hints-list {
+  transition: clip-path 0.6s var(--ease);
+}
+
+.hints-container-enter-from .hints-list {
+  clip-path: inset(0 50% 0 50% round 23px);
+}
+
+.hints-container-enter-from .vertical.hints-list {
+  clip-path: inset(0 0 100% 0 round 18px);
+}
+
+.hints-container-enter-from,
+.hints-container-leave-to {
+  opacity: 0;
 }
 
 .pos-bottom-center.hints-container-enter-from,
 .pos-bottom-center.hints-container-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(16px);
+  transform: translateX(-50%) translateY(10px);
 }
 
 .pos-top-center.hints-container-enter-from,
 .pos-top-center.hints-container-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-16px);
+  transform: translateX(-50%) translateY(-10px);
 }
 
-.pos-bottom-left.hints-container-enter-from,
-.pos-bottom-left.hints-container-leave-to,
-.pos-top-left.hints-container-enter-from,
-.pos-top-left.hints-container-leave-to {
-  opacity: 0;
-  transform: translateX(-16px);
+/* ─── Single hints inside an open bar ─── */
+.hint-enter-active {
+  transition: opacity 0.35s ease 0.08s, transform 0.5s var(--spring) 0.08s;
 }
 
-.pos-bottom-right.hints-container-enter-from,
-.pos-bottom-right.hints-container-leave-to,
-.pos-top-right.hints-container-enter-from,
-.pos-top-right.hints-container-leave-to {
-  opacity: 0;
-  transform: translateX(16px);
-}
-
-/* ─── Item Transitions ─── */
-.hint-enter-active,
 .hint-leave-active {
-  transition: opacity 0.25s ease, transform 0.3s var(--ease);
+  transition: opacity 0.18s var(--exit);
 }
 
-.hint-enter-from,
+.hint-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
 .hint-leave-to {
   opacity: 0;
-  transform: scale(0.95);
 }
 
 .hint-move {
-  transition: transform 0.25s var(--ease);
+  transition: transform 0.4s var(--ease);
 }
 </style>

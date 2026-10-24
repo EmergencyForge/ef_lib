@@ -380,7 +380,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Transition name="menu">
+  <Transition name="menu" :duration="{ enter: 600, leave: 200 }">
     <div v-if="menuStore.isVisible" class="menu-container" :class="`position-${settingsStore.menuPosition}`">
       <div class="menu glass">
         <div class="menu-header">
@@ -770,16 +770,23 @@ onUnmounted(() => {
 
 /* Transitions */
 .menu-enter-active {
-  transition: opacity 0.25s ease-out;
+  transition: opacity 0.3s ease-out;
 }
 
 .menu-leave-active {
-  transition: opacity 0.2s ease-in;
+  transition: opacity 0.2s var(--exit);
 }
 
-.menu-enter-active .menu,
+.menu-enter-active .menu {
+  transition: transform 0.6s var(--ease), opacity 0.3s ease-out, filter 0.35s ease;
+}
+
 .menu-leave-active .menu {
-  transition: transform 0.3s var(--ease), opacity 0.25s ease-out;
+  transition: transform 0.2s var(--exit), opacity 0.18s var(--exit);
+}
+
+.menu-enter-from .menu {
+  filter: blur(6px);
 }
 
 .menu-enter-from,

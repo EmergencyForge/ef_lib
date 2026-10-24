@@ -52,7 +52,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Transition name="alert">
+  <Transition name="alert" :duration="{ enter: 550, leave: 180 }">
     <div v-if="dialogStore.alertDialogVisible" class="alert-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
       <div class="alert-modal glass" :class="{ centered: dialogStore.alertDialogData.centered }">
         <!-- Icon -->
@@ -199,19 +199,19 @@ onUnmounted(() => {
 /* ─── Transitions ─── */
 
 .alert-enter-active {
-  transition: opacity 0.2s ease-out;
+  transition: opacity 0.25s ease-out;
 }
 
 .alert-leave-active {
-  transition: opacity 0.15s ease-in;
+  transition: opacity 0.18s var(--exit);
 }
 
 .alert-enter-active .alert-modal {
-  transition: transform 0.3s var(--ease), opacity 0.2s ease-out;
+  transition: transform 0.55s var(--spring), opacity 0.25s ease-out, filter 0.3s ease;
 }
 
 .alert-leave-active .alert-modal {
-  transition: transform 0.15s ease-in, opacity 0.15s ease-in;
+  transition: transform 0.18s var(--exit), opacity 0.16s var(--exit);
 }
 
 .alert-enter-from,
@@ -219,9 +219,14 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.alert-enter-from .alert-modal,
+.alert-enter-from .alert-modal {
+  transform: scale(0.92) translateY(8px);
+  opacity: 0;
+  filter: blur(6px);
+}
+
 .alert-leave-to .alert-modal {
-  transform: scale(0.94);
+  transform: scale(0.97);
   opacity: 0;
 }
 </style>

@@ -51,35 +51,18 @@ onUnmounted(() => {
 <template>
   <Transition name="progress">
     <div v-if="store.visible" class="progress-container">
-      <div class="progress-card glass">
-        <!-- Header: Icon + Label + Time + Percent -->
-        <div class="progress-header">
-          <div class="progress-info">
-            <div v-if="store.icon" class="progress-icon">
-              <i :class="resolveIconClass(store.icon)"></i>
-            </div>
-            <span class="progress-label">{{ store.label }}</span>
-          </div>
-          <span class="progress-time">{{ remainingSeconds }}s</span>
+      <div class="progress-pill glass">
+        <div class="progress-fill" :style="{ clipPath: `inset(0 ${100 - store.progress * 100}% 0 0 round 22px)` }"></div>
+        <div class="progress-content">
+          <i v-if="store.icon" class="progress-icon" :class="resolveIconClass(store.icon)"></i>
+          <span class="progress-label">{{ store.label }}</span>
+          <span class="progress-time">{{ remainingSeconds }} s</span>
         </div>
+      </div>
 
-        <!-- Bar -->
-        <div class="progress-track">
-          <div
-            class="progress-fill"
-            :style="{ width: (store.progress * 100) + '%' }"
-          />
-          <div
-            class="progress-glow"
-            :style="{ left: (store.progress * 100) + '%' }"
-          />
-        </div>
-
-        <!-- Cancel hint -->
-        <div v-if="store.canCancel" class="progress-cancel">
-          <span class="cancel-key">{{ cancelLabel }}</span>
-          <span class="cancel-text">Abbrechen</span>
-        </div>
+      <div v-if="store.canCancel" class="progress-cancel">
+        <span class="cancel-key">{{ cancelLabel }}</span>
+        <span class="cancel-text">Abbrechen</span>
       </div>
     </div>
   </Transition>
@@ -92,98 +75,77 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   pointer-events: none;
 }
 
-.progress-card {
-  width: 400px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.progress-pill {
+  width: 420px;
+  height: 52px;
+  border-radius: 26px;
+  overflow: hidden;
 }
 
-/* ─── Header ─── */
-
-.progress-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Full-width fill revealed by clip-path, so the rounded ends never squash */
+.progress-fill {
+  position: absolute;
+  inset: 4px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--accent-color);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 65%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  transition: clip-path 0.08s linear;
 }
 
-.progress-info {
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: sheen 1.6s linear infinite;
+}
+
+@keyframes sheen {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+.progress-content {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 0;
-  flex: 1;
+  padding: 0 20px;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .progress-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: rgba(var(--accent-rgb), 0.2);
-  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.35);
-  color: var(--accent-color);
-  font-size: 13px;
-  line-height: 1;
-}
-
-.progress-icon i {
-  display: block;
+  font-size: 14px;
   line-height: 1;
 }
 
 .progress-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-  white-space: nowrap;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .progress-time {
   flex-shrink: 0;
-  margin-left: 12px;
+  margin-left: auto;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--text-2);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-/* ─── Track & Fill ─── */
-
-.progress-track {
-  position: relative;
-  width: 100%;
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--well);
-  box-shadow: var(--well-rim);
-  overflow: hidden;
-}
-
-.progress-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--accent-color);
-  /* Highlight on top of the tube, works for any accent colour */
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 60%);
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.6);
-  transition: width 0.06s linear;
-}
-
-.progress-glow {
-  display: none;
 }
 
 /* ─── Cancel Hint ─── */
@@ -192,6 +154,10 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius-pill);
+  background: rgba(10, 10, 12, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   pointer-events: auto;
   cursor: pointer;
 }
@@ -203,9 +169,9 @@ onUnmounted(() => {
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
-  border-radius: 6px;
+  border-radius: 10px;
   background: var(--fill-3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
   color: var(--text);
   font-size: 11px;
   font-weight: 600;
@@ -215,7 +181,7 @@ onUnmounted(() => {
 
 .cancel-text {
   font-size: 12px;
-  color: var(--text-3);
+  color: var(--text-2);
   transition: color 0.15s ease;
 }
 
@@ -231,20 +197,20 @@ onUnmounted(() => {
 /* ─── Transitions ─── */
 
 .progress-enter-active {
-  transition: opacity 0.25s ease, transform 0.35s var(--ease);
+  transition: opacity 0.3s ease, transform 0.6s var(--spring);
 }
 
 .progress-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s var(--exit), transform 0.22s var(--exit);
 }
 
 .progress-enter-from {
   opacity: 0;
-  transform: translateX(-50%) translateY(20px);
+  transform: translateX(-50%) translateY(18px) scale(0.94);
 }
 
 .progress-leave-to {
   opacity: 0;
-  transform: translateX(-50%) translateY(12px);
+  transform: translateX(-50%) translateY(8px) scale(0.98);
 }
 </style>

@@ -228,7 +228,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Transition name="radial">
+  <Transition name="radial" :duration="{ enter: 600, leave: 160 }">
     <div v-if="store.visible" class="radial-overlay">
       <div class="radial-wheel" ref="wheelRef">
         <div class="radial-disc glass"></div>
@@ -252,6 +252,7 @@ onUnmounted(() => {
           :style="{
             left: `${(slice.labelX / VIEW) * 100}%`,
             top:  `${(slice.labelY / VIEW) * 100}%`,
+            '--i': slice.index,
           }"
         >
           <i v-if="store.items[slice.index].icon" :class="resolveIconClass(store.items[slice.index].icon!)"></i>
@@ -396,14 +397,31 @@ onUnmounted(() => {
 }
 
 /* ─── Transitions ─── */
-.radial-enter-active,
-.radial-leave-active {
-  transition: opacity 0.18s ease;
+.radial-enter-active {
+  transition: opacity 0.2s ease;
 }
 
-.radial-enter-active .radial-wheel,
+.radial-leave-active {
+  transition: opacity 0.16s var(--exit);
+}
+
+.radial-enter-active .radial-wheel {
+  transition: transform 0.45s var(--spring), opacity 0.2s ease;
+}
+
 .radial-leave-active .radial-wheel {
-  transition: transform 0.3s var(--ease), opacity 0.18s ease;
+  transition: transform 0.16s var(--exit), opacity 0.16s var(--exit);
+}
+
+/* Labels follow the wheel around, one slice after another */
+.radial-enter-active .label {
+  transition: opacity 0.3s ease, transform 0.45s var(--spring);
+  transition-delay: calc(var(--i) * 25ms + 60ms);
+}
+
+.radial-enter-from .label {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.7);
 }
 
 .radial-enter-from,
@@ -411,9 +429,13 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-.radial-enter-from .radial-wheel,
+.radial-enter-from .radial-wheel {
+  transform: scale(0.85) rotate(-6deg);
+  opacity: 0;
+}
+
 .radial-leave-to .radial-wheel {
-  transform: scale(0.88);
+  transform: scale(0.95);
   opacity: 0;
 }
 </style>

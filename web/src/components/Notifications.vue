@@ -7,11 +7,11 @@ const settingsStore = useSettingsStore()
 
 function getIcon(type: Notification['type']): string {
   switch (type) {
-    case 'success': return 'fa-solid fa-check'
-    case 'error':   return 'fa-solid fa-xmark'
-    case 'warning': return 'fa-solid fa-exclamation'
-    case 'info':    return 'fa-solid fa-info'
-    default:        return 'fa-solid fa-info'
+    case 'success': return 'fa-solid fa-circle-check'
+    case 'error':   return 'fa-solid fa-circle-xmark'
+    case 'warning': return 'fa-solid fa-triangle-exclamation'
+    case 'info':    return 'fa-solid fa-circle-info'
+    default:        return 'fa-solid fa-circle-info'
   }
 }
 </script>
@@ -77,29 +77,52 @@ function getIcon(type: Notification['type']): string {
   flex-direction: column-reverse;
 }
 
+.notification.success { --c: var(--ok);     --c-rgb: var(--ok-rgb); }
+.notification.error   { --c: var(--danger); --c-rgb: var(--danger-rgb); }
+.notification.warning { --c: var(--warn);   --c-rgb: var(--warn-rgb); }
+.notification.info    { --c: var(--info);   --c-rgb: var(--info-rgb); }
+
 .notification {
   width: 380px;
   overflow: hidden;
   pointer-events: auto;
 }
 
+/* Type colour bleeding into the glass from the leading edge */
+.notification::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(70% 140% at 0% 50%, rgba(var(--c-rgb), 0.26), transparent 70%);
+}
+
+.notification::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--c);
+  box-shadow: 0 0 12px var(--c);
+}
+
 .notification-body {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 14px 16px 18px 14px;
+  gap: 14px;
+  padding: 14px 16px 20px 20px;
 }
 
 .notification-icon {
-  width: 32px;
-  height: 32px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 15px;
+  margin-top: 1px;
+  color: var(--c);
+  font-size: 18px;
   line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(var(--c-rgb), 0.6));
 }
 
 .notification-icon i {
@@ -107,34 +130,9 @@ function getIcon(type: Notification['type']): string {
   line-height: 1;
 }
 
-.notification.success .notification-icon {
-  color: var(--ok);
-  background: rgba(var(--ok-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.3);
-}
-
-.notification.error .notification-icon {
-  color: var(--danger);
-  background: rgba(var(--danger-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--danger-rgb), 0.3);
-}
-
-.notification.warning .notification-icon {
-  color: var(--warn);
-  background: rgba(var(--warn-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--warn-rgb), 0.3);
-}
-
-.notification.info .notification-icon {
-  color: var(--info);
-  background: rgba(var(--info-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--info-rgb), 0.3);
-}
-
 .notification-content {
   flex: 1;
   min-width: 0;
-  padding-top: 1px;
 }
 
 .notification-title {
@@ -151,61 +149,66 @@ function getIcon(type: Notification['type']): string {
   color: var(--text-2);
 }
 
-/* Timer pill inset at the bottom */
 .notification-timer {
   position: absolute;
-  left: 16px;
+  left: 20px;
   right: 16px;
-  bottom: 7px;
-  height: 3px;
-  border-radius: 3px;
+  bottom: 8px;
+  height: 2px;
+  border-radius: 2px;
   background: var(--fill-2);
   overflow: hidden;
 }
 
+/* scaleX instead of width: runs on the compositor */
 .notification-timer-bar {
   height: 100%;
   width: 100%;
-  border-radius: inherit;
-  background: currentColor;
-  animation: timer-shrink 5s linear forwards;
+  background: var(--c);
+  transform-origin: left;
+  animation: timer-drain 5s linear forwards;
 }
 
-.notification.success .notification-timer { color: var(--ok); }
-.notification.error .notification-timer   { color: var(--danger); }
-.notification.warning .notification-timer { color: var(--warn); }
-.notification.info .notification-timer    { color: var(--info); }
-
-@keyframes timer-shrink {
-  from { width: 100%; }
-  to { width: 0%; }
+@keyframes timer-drain {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 /* Transitions */
-.notification-enter-active,
+.notification-enter-active {
+  transition: opacity 0.35s ease, transform 0.7s var(--spring), filter 0.45s ease;
+}
+
 .notification-leave-active {
-  transition: opacity 0.3s ease, transform 0.35s var(--ease);
+  position: absolute;
+  transition: opacity 0.22s var(--exit), transform 0.25s var(--exit), filter 0.22s ease;
 }
 
 .notification-move {
-  transition: transform 0.3s var(--ease);
+  transition: transform 0.5s var(--spring);
 }
 
-/* Right side animations */
+.notification-enter-from,
+.notification-leave-to {
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.position-top-right .notification-leave-active,
+.position-bottom-right .notification-leave-active { right: 0; }
+
+.position-top-left .notification-leave-active,
+.position-bottom-left .notification-leave-active { left: 0; }
+
 .position-top-right .notification-enter-from,
-.position-top-right .notification-leave-to,
-.position-bottom-right .notification-enter-from,
-.position-bottom-right .notification-leave-to {
-  opacity: 0;
-  transform: translateX(40px);
-}
+.position-bottom-right .notification-enter-from { transform: translateX(40px) scale(0.96); }
 
-/* Left side animations */
 .position-top-left .notification-enter-from,
+.position-bottom-left .notification-enter-from { transform: translateX(-40px) scale(0.96); }
+
+.position-top-right .notification-leave-to,
+.position-bottom-right .notification-leave-to { transform: translateX(24px) scale(0.98); }
+
 .position-top-left .notification-leave-to,
-.position-bottom-left .notification-enter-from,
-.position-bottom-left .notification-leave-to {
-  opacity: 0;
-  transform: translateX(-40px);
-}
+.position-bottom-left .notification-leave-to { transform: translateX(-24px) scale(0.98); }
 </style>
