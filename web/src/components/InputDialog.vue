@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { t } from '@/i18n'
 import { onMounted, onUnmounted, ref } from 'vue'
-import { useDialogStore, type InputDialogField } from '@/stores/dialog'
+import { useDialogStore, COLORS, type InputDialogField } from '@/stores/dialog'
 import { fetchNui } from '@/composables/useNui'
+import { resolveIconClass } from '@/composables/icons'
+import DatePicker from '@/components/DatePicker.vue'
 
 const dialogStore = useDialogStore()
 const containerRef = ref<HTMLElement | null>(null)
 
-function getSelectOptions(field: InputDialogField): Array<{ label: string; value: any }> {
+// Index of the date field whose calendar is open, so Escape closes that before the dialog
+const openDate = ref<number | null>(null)
+
+function getSelectOptions(field: InputDialogField): Array<{ label: string; value: any; icon?: string }> {
   if (!field.options) return []
   return field.options.map(opt => {
     if (typeof opt === 'object' && opt !== null && 'label' in opt && 'value' in opt) {
-      return opt as { label: string; value: any }
+      return opt as { label: string; value: any; icon?: string }
     }
     return { label: String(opt), value: opt }
   })
@@ -48,10 +53,15 @@ function onSliderInput(index: number, event: Event) {
 }
 
 // WebKit has no filled-track pseudo element, the fill is a gradient stop
-function sliderPercent(field: { min?: number; max?: number }, value: unknown): number {
-  const min = field.min ?? 0
-  const max = field.max ?? 100
+function sliderPercent(field: InputDialogField, value: unknown): number {
+  const min = Number(field.min ?? 0)
+  const max = Number(field.max ?? 100)
   return max > min ? ((Number(value) - min) / (max - min)) * 100 : 0
+}
+
+function toggleMulti(index: number, value: any) {
+  const current: any[] = dialogStore.inputDialogValues[index] || []
+  dialogStore.setInputDialogValue(index, current.includes(value) ? current.filter(v => v !== value) : [...current, value])
 }
 
 function confirm() {
@@ -60,11 +70,13 @@ function confirm() {
     // Required fields missing - flash the required ones
     return
   }
+  openDate.value = null
   dialogStore.closeInputDialog()
   fetchNui('inputDialogResult', { values: results })
 }
 
 function cancel() {
+  openDate.value = null
   dialogStore.closeInputDialog()
   fetchNui('inputDialogResult', { values: null })
 }
@@ -88,7 +100,8 @@ function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape') {
     event.preventDefault()
     event.stopPropagation()
-    cancel()
+    if (openDate.value !== null) openDate.value = null
+    else cancel()
   } else if (event.key === 'Enter' && !(event.target instanceof HTMLTextAreaElement)) {
     // Don't submit on Enter inside textareas
     event.preventDefault()
@@ -175,7 +188,7 @@ onUnmounted(() => {
               @click="onCheckboxToggle(index)"
             >
               <div class="checkbox-box" :class="{ checked: dialogStore.inputDialogValues[index] }"></div>
-              <span class="checkbox-label">{{ dialogStore.inputDialogValues[index] ? 'Aktiviert' : 'Deaktiviert' }}</span>
+              <span class="checkbox-label">{{ dialogStore.inputDialogValues[index] ? t('Aktiviert') : t('Deaktiviert') }}</span>
             </div>
 
             <!-- Select -->
@@ -208,6 +221,52 @@ onUnmounted(() => {
                 @input="onSliderInput(index, $event)"
               />
               <span class="slider-value">{{ dialogStore.inputDialogValues[index] }}</span>
+            </div>
+
+            <!-- Color -->
+            <div
+              v-else-if="field.type === 'color'"
+              class="field-colors"
+              :style="{ gridTemplateColumns: `repeat(${Math.min((field.options || COLORS).length, 8)}, 1fr)` }"
+            >
+              <button
+                v-for="c in (field.options as string[] || COLORS)"
+                :key="c"
+                type="button"
+                class="color-tile"
+                :class="{ on: String(dialogStore.inputDialogValues[index]).toLowerCase() === c.toLowerCase() }"
+                :style="{ background: c }"
+                :aria-label="c"
+                @click="dialogStore.setInputDialogValue(index, c)"
+              ></button>
+            </div>
+
+            <!-- Date -->
+            <DatePicker
+              v-else-if="field.type === 'date'"
+              :model-value="dialogStore.inputDialogValues[index]"
+              :open="openDate === index"
+              :min="field.min as string | undefined"
+              :max="field.max as string | undefined"
+              :placeholder="field.placeholder"
+              @update:model-value="dialogStore.setInputDialogValue(index, $event)"
+              @toggle="openDate = openDate === index ? null : index"
+            />
+
+            <!-- Multi Select -->
+            <div v-else-if="field.type === 'multi-select'" class="field-tiles">
+              <button
+                v-for="opt in getSelectOptions(field)"
+                :key="String(opt.value)"
+                type="button"
+                class="tile"
+                :class="{ on: (dialogStore.inputDialogValues[index] || []).includes(opt.value) }"
+                @click="toggleMulti(index, opt.value)"
+              >
+                <i v-if="opt.icon" class="tile-icon" :class="resolveIconClass(opt.icon)"></i>
+                <span class="tile-label">{{ opt.label }}</span>
+                <span class="tile-check"><i class="fa-solid fa-check"></i></span>
+              </button>
             </div>
           </div>
         </div>
@@ -481,6 +540,105 @@ onUnmounted(() => {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+}
+
+/* Color tiles */
+.field-colors {
+  display: grid;
+  gap: 6px;
+}
+
+.color-tile {
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 9px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.3s var(--spring), box-shadow 0.2s ease;
+}
+
+.color-tile:hover {
+  transform: scale(1.06);
+}
+
+.color-tile.on {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--text), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Multi-select tiles */
+.field-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.tile {
+  position: relative;
+  min-height: 58px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: none;
+  border-radius: 12px;
+  background: var(--fill-1);
+  box-shadow: var(--ctl-rim);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tile:hover {
+  background: var(--fill-2);
+}
+
+.tile-icon {
+  font-size: 16px;
+}
+
+.tile-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: var(--on-accent);
+  font-size: 8px;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.15s ease, transform 0.3s var(--spring);
+}
+
+.tile.on {
+  background: rgba(var(--accent-rgb), 0.18);
+  box-shadow: inset 0 0 0 1.5px var(--accent-color);
+  color: var(--text);
+}
+
+.tile.on .tile-icon {
+  color: var(--accent-color);
+}
+
+.tile.on .tile-check {
+  opacity: 1;
+  transform: none;
 }
 
 /* ─── Footer ─── */

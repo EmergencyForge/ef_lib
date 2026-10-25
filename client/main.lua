@@ -858,7 +858,7 @@ end
 --- Open a multi-field input dialog and wait for user input
 --- @param title string Dialog title
 --- @param fields table Array of field definitions: { type, label, description?, placeholder?, required?, default?, min?, max?, step?, checked?, options? }
----   type: 'input' | 'number' | 'checkbox' | 'select' | 'slider' | 'textarea'
+---   type: 'input' | 'number' | 'checkbox' | 'select' | 'slider' | 'textarea' | 'color' | 'date' | 'multi-select'
 --- @return table|nil Array of values in field order, or nil if cancelled
 local function InputDialog(title, fields)
     if inputDialogPromise then
@@ -1131,6 +1131,7 @@ local function ProgressBar(data)
             icon = data.icon,
             canCancel = canCancel,
             cancelKey = data.cancelKey or 'X',
+            style = data.style,
         }
     })
 
@@ -1229,6 +1230,28 @@ RegisterNUICallback('progressBarResult', function(data, cb)
     end
     cb('ok')
 end)
+
+--- Same as ProgressBar, drawn as a small dial for short actions. IsProgressBarActive and
+--- CancelProgressBar cover it too.
+local function ProgressCircle(data)
+    if type(data) == 'table' then data.style = 'circle' end
+    return ProgressBar(data)
+end
+
+-----------------------
+-- Event Banner
+-----------------------
+
+--- Card in the upper middle for moments bigger than a notification: promotion, mission done, shift start.
+--- Banners queue up and show one after another.
+--- @param data table { title, message?, icon?, stats? = { { label, value }, ... }, duration? = ms (default 5000) }
+local function Banner(data)
+    if type(data) ~= 'table' or type(data.title) ~= 'string' then
+        print('^1[EF_LIB] Banner: data.title must be a string^0')
+        return
+    end
+    SendNUIMessage({ action = 'showBanner', data = data })
+end
 
 --- Check if a progressbar is currently active
 --- @return boolean
@@ -1467,6 +1490,8 @@ end)
 
 -- ProgressBar
 exports('ProgressBar', ProgressBar)
+exports('ProgressCircle', ProgressCircle)
+exports('Banner', Banner)
 exports('IsProgressBarActive', IsProgressBarActive)
 exports('CancelProgressBar', CancelProgressBar)
 
@@ -1513,6 +1538,12 @@ RegisterNetEvent('ef_lib:minigame', function(gameType, difficulty, retries)
 end)
 RegisterNetEvent('ef_lib:progressBar', function(data)
     ProgressBar(data)
+end)
+RegisterNetEvent('ef_lib:banner', function(data)
+    Banner(data)
+end)
+RegisterNetEvent('ef_lib:progressCircle', function(data)
+    ProgressCircle(data)
 end)
 RegisterNetEvent('ef_lib:cancelProgressBar', function()
     CancelProgressBar()

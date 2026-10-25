@@ -7,6 +7,8 @@ import InputDialog from '@/components/InputDialog.vue'
 import AlertDialog from '@/components/AlertDialog.vue'
 import Minigame from '@/components/Minigame.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
+import ProgressCircle from '@/components/ProgressCircle.vue'
+import EventBanner from '@/components/EventBanner.vue'
 import RadialMenu from '@/components/RadialMenu.vue'
 import SkillCheck from '@/components/SkillCheck.vue'
 import RequestPrompt from '@/components/RequestPrompt.vue'
@@ -220,9 +222,11 @@ onMounted(() => {
     <AlertDialog />
     <Minigame />
     <ProgressBar />
+    <ProgressCircle />
     <RadialMenu />
     <SkillCheck />
     <RequestPrompt />
+    <EventBanner />
   </div>
 </template>
 

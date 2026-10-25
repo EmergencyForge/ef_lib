@@ -4,26 +4,29 @@ import { ref } from 'vue'
 // ─── Input Dialog Types ───
 
 export interface InputDialogField {
-  type: 'input' | 'number' | 'checkbox' | 'select' | 'slider' | 'textarea'
+  type: 'input' | 'number' | 'checkbox' | 'select' | 'slider' | 'textarea' | 'color' | 'date' | 'multi-select'
   label: string
   description?: string
   placeholder?: string
   required?: boolean
   default?: any
-  // For number / slider
-  min?: number
-  max?: number
+  // For number / slider, and 'YYYY-MM-DD' strings for date
+  min?: number | string
+  max?: number | string
   step?: number
   // For checkbox
   checked?: boolean
-  // For select
-  options?: Array<{ label: string; value: any }> | string[] | number[]
+  // For select and multi-select; hex strings for color
+  options?: Array<{ label: string; value: any; icon?: string }> | string[] | number[]
 }
 
 export interface InputDialogData {
   title: string
   fields: InputDialogField[]
 }
+
+// Colour field palette when the script passes no options
+export const COLORS = ['#f0500a', '#e11d48', '#a855f7', '#2563eb', '#0891b2', '#16a34a', '#f5f5f4', '#18181b']
 
 // ─── Alert Dialog Types ───
 
@@ -65,6 +68,12 @@ export const useDialogStore = defineStore('dialog', () => {
       if (field.type === 'number' || field.type === 'slider') {
         return field.default ?? field.min ?? 0
       }
+      if (field.type === 'color') {
+        return field.default ?? field.options?.[0] ?? COLORS[0]
+      }
+      if (field.type === 'multi-select') {
+        return Array.isArray(field.default) ? [...field.default] : []
+      }
       if (field.type === 'select') {
         if (field.default !== undefined) return field.default
         if (field.options && field.options.length > 0) {
@@ -96,7 +105,7 @@ export const useDialogStore = defineStore('dialog', () => {
       const value = inputDialogValues.value[i]
 
       if (field.required) {
-        if (value === '' || value === null || value === undefined) {
+        if (value === '' || value === null || value === undefined || (Array.isArray(value) && value.length === 0)) {
           return null
         }
       }

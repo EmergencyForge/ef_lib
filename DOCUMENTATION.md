@@ -578,6 +578,9 @@ exports.ef_lib:CancelSkillCheck()
 -- Anfragen
 exports.ef_lib:Request(data)                        -- → accepted, 'accept'|'decline'|'timeout'
 
+-- Ereignis-Banner
+exports.ef_lib:Banner(data)
+
 -- Abklingzeiten und Cache
 exports.ef_lib:Cooldown(key, ms)                    -- → free, remaining
 exports.ef_lib:GetCooldown(key)                     -- → ms
@@ -586,6 +589,7 @@ exports.ef_lib:GetCache(key)                        -- playerId, serverId, ped, 
 
 -- ProgressBar
 exports.ef_lib:ProgressBar(data)                    -- Fortschrittsanzeige → boolean
+exports.ef_lib:ProgressCircle(data)                 -- dasselbe als Fortschrittskreis → boolean
 exports.ef_lib:IsProgressBarActive()                -- Status prüfen
 exports.ef_lib:CancelProgressBar()                  -- Progressbar abbrechen
 
@@ -619,6 +623,9 @@ exports.ef_lib:CloseMenuForPlayer(source)
 
 -- Anfragen
 exports.ef_lib:Request(source, data)                -- → accepted, 'accept'|'decline'|'timeout'
+
+-- Ereignis-Banner
+exports.ef_lib:Banner(source, data)                 -- -1 für alle
 
 -- Abklingzeiten
 exports.ef_lib:Cooldown(key, ms)                    -- → free, remaining
@@ -891,6 +898,19 @@ RegisterCommand('treat', function()
 end)
 ```
 
+### Fortschrittskreis
+
+Für kurze Aktionen wie Durchsuchen oder Kabel anschließen. Gleiche Optionen und Rückgabe wie `ProgressBar`, nur als Ziffernblatt mit 36 Strichen, Symbol in der Mitte und Text daneben. `IsProgressBarActive` und `CancelProgressBar` gelten auch hier.
+
+```lua
+local done = exports.ef_lib:ProgressCircle({
+    label = 'Ladekabel anschließen',
+    duration = 6000,
+    icon = 'plug',
+    canCancel = true,
+})
+```
+
 ---
 
 ## Dialog System
@@ -912,6 +932,12 @@ local result = exports.ef_lib:InputDialog('Dialog Titel', {
     }},
     { type = 'slider', label = 'Prozent', min = 0, max = 100, step = 5, default = 50 },
     { type = 'textarea', label = 'Beschreibung', placeholder = 'Text eingeben...' },
+    { type = 'color', label = 'Lackfarbe' },
+    { type = 'date', label = 'Zulassung bis', min = '2026-01-01', default = '2026-12-24' },
+    { type = 'multi-select', label = 'Ausstattung', options = {
+        { label = 'Sondersignal', value = 'signal', icon = 'tower-broadcast' },
+        { label = 'Funk', value = 'radio', icon = 'walkie-talkie' },
+    }},
 })
 
 if not result then
@@ -926,6 +952,9 @@ local confirmed = result[3]  -- boolean
 local selected = result[4]   -- any (value)
 local percent = result[5]    -- number
 local text = result[6]       -- string
+local color = result[7]      -- '#f0500a'
+local date = result[8]       -- '2026-12-24'
+local extras = result[9]     -- { 'signal', 'radio' }
 ```
 
 **Wichtig:** `InputDialog` blockiert den aktuellen Thread. Verwende es in `CreateThread` oder Event-Handlern.
@@ -940,6 +969,9 @@ local text = result[6]       -- string
 | `select` | Dropdown-Auswahl | `options` (Array von `{label, value}` oder strings), `default` |
 | `slider` | Schieberegler | `min`, `max`, `step`, `default` |
 | `textarea` | Mehrzeiliges Textfeld | `placeholder`, `required`, `default` |
+| `color` | Farbkacheln, gibt den Hex-Wert zurück | `options` (Liste von Hex-Werten, Standard sind 8 Farben), `default` |
+| `date` | Feld mit aufklappendem Kalender, gibt `'YYYY-MM-DD'` zurück | `min`, `max` (als `'YYYY-MM-DD'`), `placeholder`, `required`, `default` |
+| `multi-select` | Kacheln zum An- und Abwählen, gibt eine Liste der Werte zurück | `options` (`{label, value, icon?}` oder strings), `required` (mindestens eine), `default` (Liste) |
 
 #### Rückgabewert
 
@@ -1356,6 +1388,29 @@ local accepted, answer = exports.ef_lib:Request(targetSource, { title = 'Durchsu
 ```
 
 Kommt eine Anfrage, während noch eine offen ist, wartet sie, bis die erste beantwortet ist. Verlässt der Spieler den Server, gibt der Server-Export `false, 'timeout'` zurück.
+
+---
+
+## Ereignis-Banner
+
+Für Momente, die mehr sind als eine Meldung: Beförderung, Einsatz beendet, Schichtbeginn. Eine Glaskarte mit Medaille erscheint im oberen Drittel und geht nach `duration` von selbst. Kommen mehrere, zeigt ef_lib sie nacheinander.
+
+```lua
+-- Client
+exports.ef_lib:Banner({
+    title = 'Befördert zum Oberbrandmeister',
+    message = 'Feuer- und Rettungswache 1',  -- optional
+    icon = 'medal',                          -- optional, Font-Awesome-Name
+    stats = {                                -- optional, kleine Werte unter dem Text
+        { label = 'Dienstzeit', value = '124 h' },
+        { label = 'Einsätze', value = 87 },
+    },
+    duration = 5000,                         -- optional, ms (Standard 5000)
+})
+
+-- Server, -1 für alle Spieler
+exports.ef_lib:Banner(source, { title = 'Einsatz beendet', message = 'B3 Wohnungsbrand, Grove Street' })
+```
 
 ---
 

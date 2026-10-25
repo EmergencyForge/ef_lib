@@ -13,13 +13,14 @@ Das Projekt wird hobbymäßig von **EmergencyForge** entwickelt und ist für jeg
 ## Features
 
 - **Menüsystem** - Dynamische Menüs mit Buttons, Checkboxen, Inputs, Selects, Nummernfeldern, Untermenüs & Bestätigungen inkl. Suchfunktion
-- **Dialogsystem** - Input-Dialoge mit verschiedenen Feldtypen (Input, Number, Checkbox, Select, Slider, Textarea) sowie Alert-Dialoge
+- **Dialogsystem** - Input-Dialoge mit verschiedenen Feldtypen (Input, Number, Checkbox, Select, Slider, Textarea, Farbe, Datum, Mehrfachauswahl) sowie Alert-Dialoge
 - **Callback-System** - Synchrone & asynchrone Client-Server-Kommunikation mit automatischem Timeout und Cleanup
 - **Benachrichtigungen** - Toast-Notifications mit den Typen: Success, Error, Warning & Info
 - **Minispiele** - Vier Skillchecks: Schloss knacken mit Spannung, Tresor mit verstecktem Code, Reaktionskette und Kabel verbinden. Vier Stufen oder eigene Werte, Klänge und Ergebnis mit Zeit und Fehlversuchen
 - **Skillcheck** - Timing-Ring wie bei ox_lib, mehrere Stufen hintereinander, der Spieler kann weiterlaufen
 - **Anfragen** - Annehmen oder Ablehnen per Taste, vom Client oder Server aus, etwa für Einladungen
-- **Progressbar** - Fortschrittsanzeige mit Animationen, Prop-Attachment und Steuerungssperren
+- **Progressbar** - Fortschrittsanzeige mit Animationen, Prop-Attachment und Steuerungssperren, als Leiste oder als Kreis
+- **Ereignis-Banner** - Glaskarte mit Medaille für Beförderungen, Einsatzende oder Schichtbeginn
 - **Abklingzeiten & Cache** - Cooldowns pro Resource auf Client und Server, Events beim Einsteigen oder Waffenwechsel
 - **Versionscheck** - Banner beim Serverstart und Hinweis auf neue Releases für EmergencyForge-Scripts
 - **Deutsch & Englisch** - Eingebaute Texte per `Config.Locale` umschaltbar

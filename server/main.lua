@@ -118,6 +118,11 @@ local function SendNotificationToAll(type, title, message, duration)
     TriggerClientEvent('ef_lib:notify', -1, type, title, message, duration)
 end
 
+-- Event banner for one player, or everyone with -1
+local function Banner(source, data)
+    TriggerClientEvent('ef_lib:banner', source, data)
+end
+
 -----------------------
 -- Menu Control
 -----------------------
@@ -247,6 +252,7 @@ exports('UnregisterCallback', UnregisterCallback)
 -- Notifications
 exports('SendNotification', SendNotification)
 exports('SendNotificationToAll', SendNotificationToAll)
+exports('Banner', Banner)
 
 -- Menu Control
 exports('OpenMenuForPlayer', OpenMenuForPlayer)

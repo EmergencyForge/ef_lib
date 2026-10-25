@@ -7,6 +7,7 @@ export interface ProgressBarData {
   icon?: string
   canCancel?: boolean
   cancelKey?: string
+  style?: 'bar' | 'circle'
 }
 
 export const useProgressStore = defineStore('progress', () => {
@@ -16,6 +17,7 @@ export const useProgressStore = defineStore('progress', () => {
   const icon = ref<string | undefined>(undefined)
   const canCancel = ref(false)
   const cancelKey = ref('X')
+  const style = ref<'bar' | 'circle'>('bar')
   const startTime = ref(0)
   const progress = ref(0)
   const completed = ref(false)
@@ -32,6 +34,7 @@ export const useProgressStore = defineStore('progress', () => {
     icon.value = data.icon
     canCancel.value = data.canCancel ?? false
     cancelKey.value = (data.cancelKey || 'X').toUpperCase()
+    style.value = data.style === 'circle' ? 'circle' : 'bar'
     startTime.value = Date.now()
 
     visible.value = true
@@ -79,6 +82,7 @@ export const useProgressStore = defineStore('progress', () => {
     icon,
     canCancel,
     cancelKey,
+    style,
     progress,
     progressPercent,
     completed,

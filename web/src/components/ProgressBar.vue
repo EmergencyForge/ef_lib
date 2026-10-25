@@ -13,6 +13,7 @@ function handleCancel() {
   }
 }
 
+// Also serves ProgressCircle, both read this store
 function handleKeyDown(e: KeyboardEvent) {
   if (!store.visible || !store.canCancel) return
 
@@ -45,7 +46,7 @@ onUnmounted(() => {
 
 <template>
   <Transition name="progress">
-    <div v-if="store.visible" class="progress-container">
+    <div v-if="store.visible && store.style === 'bar'" class="progress-container">
       <div class="progress-pill glass">
         <div class="progress-fill" :style="{ clipPath: `inset(0 ${100 - store.progress * 100}% 0 0 round 22px)` }"></div>
         <div class="progress-content">

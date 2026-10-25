@@ -9,6 +9,9 @@ export const locale = ref<Locale>('de')
 const en: Record<string, string> = {
   'Abbrechen': 'Cancel',
   'Bestätigen': 'Confirm',
+  'Aktiviert': 'On',
+  'Deaktiviert': 'Off',
+  'Datum wählen': 'Pick a date',
   'Ja': 'Yes',
   'Bist du sicher?': 'Are you sure?',
   'Zurück': 'Back',
