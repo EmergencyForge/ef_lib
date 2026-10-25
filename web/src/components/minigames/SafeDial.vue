@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/i18n'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { SafeDialParams } from '@/minigames/params'
 import { sfx } from '@/composables/sfx'
@@ -202,7 +203,7 @@ onUnmounted(() => {
   <div class="sd">
     <div class="dir" :class="wantDir === 1 ? 'left' : 'right'">
       <i :class="wantDir === 1 ? 'fa-solid fa-rotate-left' : 'fa-solid fa-rotate-right'"></i>
-      {{ wantDir === 1 ? 'Nach links drehen' : 'Nach rechts drehen' }}
+      {{ wantDir === 1 ? t('Nach links drehen') : t('Nach rechts drehen') }}
     </div>
 
     <div class="wrap" :class="{ hot: closeness >= 1 }">
@@ -211,7 +212,7 @@ onUnmounted(() => {
     </div>
 
     <div class="combo">
-      <span v-if="known" class="note"><i class="fa-solid fa-note-sticky"></i> Notiz</span>
+      <span v-if="known" class="note"><i class="fa-solid fa-note-sticky"></i> {{ t('Notiz') }}</span>
       <template v-for="(t, i) in targets" :key="i">
         <span v-if="i > 0" class="sep">·</span>
         <div class="slot" :class="{ active: i === current, solved: solved[i] }">{{ solved[i] || known ? t : '?' }}</div>

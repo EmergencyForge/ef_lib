@@ -8,6 +8,8 @@ import AlertDialog from '@/components/AlertDialog.vue'
 import Minigame from '@/components/Minigame.vue'
 import ProgressBar from '@/components/ProgressBar.vue'
 import RadialMenu from '@/components/RadialMenu.vue'
+import SkillCheck from '@/components/SkillCheck.vue'
+import RequestPrompt from '@/components/RequestPrompt.vue'
 import { useMenuStore } from '@/stores/menu'
 import { useNotificationStore } from '@/stores/notification'
 import { useSettingsStore } from '@/stores/settings'
@@ -17,6 +19,7 @@ import { useMinigameStore, type MinigameConfig } from '@/stores/minigame'
 import { useProgressStore, type ProgressBarData } from '@/stores/progress'
 import { useNuiEvent, fetchNui, isInGame } from '@/composables/useNui'
 import { DEFAULT_ACCENT } from '@/stores/config'
+import { locale } from '@/i18n'
 
 const menuStore = useMenuStore()
 const notificationStore = useNotificationStore()
@@ -64,7 +67,9 @@ useNuiEvent('notification', (data: {
 
 // ─── Config Events ───
 
-useNuiEvent('setConfig', (data: { accentColor?: string }) => {
+useNuiEvent('setConfig', (data: { accentColor?: string; locale?: string }) => {
+  if (data.locale === 'de' || data.locale === 'en') locale.value = data.locale
+
   // Only apply server config if user hasn't customized
   // The old blue default counts as untouched, it predates the orange one
   const untouched = [DEFAULT_ACCENT, '#3b82f6'].includes(settingsStore.accentColor)
@@ -216,6 +221,8 @@ onMounted(() => {
     <Minigame />
     <ProgressBar />
     <RadialMenu />
+    <SkillCheck />
+    <RequestPrompt />
   </div>
 </template>
 

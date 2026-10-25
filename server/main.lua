@@ -133,8 +133,112 @@ local function CloseMenuForPlayer(source)
 end
 
 -----------------------
+-- Requests
+-----------------------
+
+local pendingRequests = {}
+local requestCounter = 0
+
+--- Ask a player and wait for the answer (blocks current thread). Shown with the accept and decline keys,
+--- the player keeps control meanwhile. See client/request.lua for the fields of data.
+--- @return boolean accepted
+--- @return string answer 'accept', 'decline' or 'timeout'
+local function Request(source, data)
+    requestCounter = requestCounter + 1
+    local id = requestCounter
+    local p = promise.new()
+    pendingRequests[id] = { source = tonumber(source), promise = p }
+    TriggerClientEvent('ef_lib:request', source, id, data)
+
+    -- The client times out on its own. This one is for players who leave or have other requests queued first.
+    SetTimeout((tonumber(data and data.duration) or 15000) + 60000, function()
+        if pendingRequests[id] then
+            pendingRequests[id] = nil
+            p:resolve('timeout')
+        end
+    end)
+
+    local answer = Citizen.Await(p)
+    return answer == 'accept', answer
+end
+
+RegisterNetEvent('ef_lib:requestResult', function(id, answer)
+    local pending = pendingRequests[id]
+    if not pending or pending.source ~= source then return end
+    pendingRequests[id] = nil
+    pending.promise:resolve((answer == 'accept' or answer == 'decline') and answer or 'timeout')
+end)
+
+AddEventHandler('playerDropped', function()
+    local src = source
+    for id, pending in pairs(pendingRequests) do
+        if pending.source == src then
+            pendingRequests[id] = nil
+            pending.promise:resolve('timeout')
+        end
+    end
+end)
+
+-----------------------
+-- Version Check
+-----------------------
+
+local VERSION_URL = 'https://emergencyforge.de/api/versions/%s'
+local BANNER_WIDTH = 82
+local BANNER = {
+    "^1  ______                                               ^0______                      ",
+    "^1 |  ____|                                             ^0|  ____|                     ",
+    "^1 | |__   _ __ ___   ___ _ __ __ _  ___ _ __   ___ _   _^0| |__ ___  _ __ __ _  ___   ",
+    "^1 |  __| | '_ ` _ \\ / _ \\ '__/ _` |/ _ \\ '_ \\ / __| | | ^0|  __/ _ \\| '__/ _` |/ _ \\  ",
+    "^1 | |____| | | | | |  __/ | | (_| |  __/ | | | (__| |_| ^0| | | (_) | | | (_| |  __/  ",
+    "^1 |______|_| |_| |_|\\___|_|  \\__, |\\___|_| |_|\\___|\\__, ^0|_|  \\___/|_|  \\__, |\\___|  ",
+    "^1                            __/ |                 __/ ^0|               __/ |       ",
+    "^1                           |___/                 |___/ ^0               |___/        ",
+}
+
+local function rightAlign(text, color)
+    local width = #text:gsub('%^%d', '')
+    return color .. string.rep(' ', math.max(0, BANNER_WIDTH - width)) .. text .. '^0'
+end
+
+local function versionNumber(version)
+    local major, minor, patch = tostring(version):match('(%d+)%.?(%d*)%.?(%d*)')
+    return (tonumber(major) or 0) * 1000000 + (tonumber(minor) or 0) * 1000 + (tonumber(patch) or 0)
+end
+
+--- Print the EmergencyForge banner for the calling resource and say in the console when a newer release exists.
+--- The current version is the one in the caller's fxmanifest.lua.
+--- @param label? string Name in the banner (default: the resource name)
+--- @param repo? string Name on emergencyforge.de/api/versions, when the resource folder is named differently
+local function CheckVersion(label, repo)
+    local resource = GetInvokingResource() or GetCurrentResourceName()
+    local current = GetResourceMetadata(resource, 'version', 0) or '0.0.0'
+
+    print('')
+    for _, line in ipairs(BANNER) do print(line) end
+    print(rightAlign((label or resource) .. ' ^3v' .. current, '^0'))
+    print('')
+
+    PerformHttpRequest(VERSION_URL:format(repo or resource), function(status, body)
+        if status ~= 200 or not body then return end
+        local ok, data = pcall(json.decode, body)
+        if not ok or type(data) ~= 'table' or not data.version then return end
+        if versionNumber(data.version) > versionNumber(current) then
+            print(('^2[%s] %s^0'):format(resource, L('Neue Version verfügbar: v%s (%s)', data.version, data.commit or '?')))
+            if data.url then print(('^2[%s] %s^0'):format(resource, data.url)) end
+        end
+    end, 'GET', '', { ['User-Agent'] = 'ef_lib/' .. resource })
+end
+
+-----------------------
 -- Exports
 -----------------------
+
+-- Version Check
+exports('CheckVersion', CheckVersion)
+
+-- Requests
+exports('Request', Request)
 
 -- Callback System
 exports('RegisterCallback', RegisterCallback)

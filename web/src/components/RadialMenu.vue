@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/i18n'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRadialStore } from '@/stores/radial'
 import { useNuiEvent, fetchNui } from '@/composables/useNui'
@@ -264,7 +265,7 @@ onUnmounted(() => {
         <!-- Center: back arrow when inside a submenu -->
         <div v-if="store.history.length > 0" class="radial-center">
           <i class="fa-solid fa-angle-left"></i>
-          <span class="center-text">Zurück</span>
+          <span class="center-text">{{ t('Zurück') }}</span>
         </div>
       </div>
     </div>

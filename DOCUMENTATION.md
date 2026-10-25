@@ -18,6 +18,12 @@ Config = {}
 -- Akzentfarbe (HEX Code)
 Config.AccentColor = '#f0500a'
 
+-- Sprache der eingebauten Texte: 'de' oder 'en'
+Config.Locale = 'de'
+
+-- Standardtasten für Anfragen (Spieler können sie in den FiveM-Tastenbelegungen ändern)
+Config.RequestKeys = { accept = 'Y', decline = 'N' }
+
 -- Spielbild hinter Dialogen, Minispielen und Radialmenü verwischen
 -- Die NUI kann das Spiel selbst nicht verwischen, dafür nutzt ef_lib den Screen-Blur von GTA
 Config.ScreenBlur = true
@@ -322,6 +328,12 @@ Normaler klickbarer Menüeintrag mit Pfeil-Indikator.
 }
 ```
 
+Soll im Menü ein anderer Text stehen als der Wert, der zurückkommt, geht jede Option auch als Tabelle:
+
+```lua
+options = { { value = 'left', label = 'Links' }, { value = 'right', label = 'Rechts' } }
+```
+
 ---
 
 ### 6. Number (Zahlenwähler)
@@ -559,6 +571,18 @@ exports.ef_lib:HideAllHints()
 
 -- Minigames
 exports.ef_lib:Minigame(gameType, difficulty, retries)   -- difficulty darf auch eine Options-Tabelle sein; gibt success, result zurück
+exports.ef_lib:SkillCheck(difficulty, keys)         -- Timing-Ring → boolean
+exports.ef_lib:IsSkillCheckActive()
+exports.ef_lib:CancelSkillCheck()
+
+-- Anfragen
+exports.ef_lib:Request(data)                        -- → accepted, 'accept'|'decline'|'timeout'
+
+-- Abklingzeiten und Cache
+exports.ef_lib:Cooldown(key, ms)                    -- → free, remaining
+exports.ef_lib:GetCooldown(key)                     -- → ms
+exports.ef_lib:ClearCooldown(key)
+exports.ef_lib:GetCache(key)                        -- playerId, serverId, ped, vehicle, seat, weapon
 
 -- ProgressBar
 exports.ef_lib:ProgressBar(data)                    -- Fortschrittsanzeige → boolean
@@ -592,6 +616,17 @@ exports.ef_lib:SendNotificationToAll(type, title, message, duration)
 -- Menu Control
 exports.ef_lib:OpenMenuForPlayer(source, menuData)
 exports.ef_lib:CloseMenuForPlayer(source)
+
+-- Anfragen
+exports.ef_lib:Request(source, data)                -- → accepted, 'accept'|'decline'|'timeout'
+
+-- Abklingzeiten
+exports.ef_lib:Cooldown(key, ms)                    -- → free, remaining
+exports.ef_lib:GetCooldown(key)
+exports.ef_lib:ClearCooldown(key)
+
+-- Versionscheck
+exports.ef_lib:CheckVersion(label, repo)            -- Banner + Hinweis auf neues Release
 ```
 
 ---
@@ -604,10 +639,16 @@ ef_lib/
 ├── fxmanifest.lua          # Resource Manifest
 ├── example.lua             # Beispiel-Script
 ├── DOCUMENTATION.md        # Diese Datei
+├── shared/
+│   ├── locale.lua          # Englische Texte für Config.Locale = 'en'
+│   └── cooldown.lua        # Abklingzeiten (Client und Server)
 ├── client/
-│   └── main.lua            # Client: Menu, Callbacks, Dialoge, Hints, Zones, Minigames, ProgressBar
+│   ├── main.lua            # Client: Menu, Callbacks, Dialoge, Hints, Zones, Minigames, Skillcheck, ProgressBar
+│   ├── cache.lua           # Cache und ef_lib:cache-Event
+│   ├── request.lua         # Anfragen mit Annehmen und Ablehnen
+│   └── vehicleProperties.lua
 ├── server/
-│   └── main.lua            # Server: Callbacks, Notifications, Menu Control
+│   └── main.lua            # Server: Callbacks, Notifications, Menu Control, Anfragen, Versionscheck
 └── web/
     ├── src/                # Vue.js Quellcode
     │   ├── components/     # UI Komponenten (Menu, InputDialog, AlertDialog, Notifications, etc.)
@@ -1269,3 +1310,105 @@ RegisterKeyMapping('+quick_actions', 'Schnellaktionen-Wheel', 'keyboard', 'Z')
 - Submenüs sind **beliebig tief** verschachtelbar.
 - Das Radial gibt **Tastatur-Inputs** durch (`SetNuiFocusKeepInput(true)`) — der Spieler kann sich während des offenen Wheels weiterbewegen. Maus geht an die UI.
 - Beim Klick-Selfclose ist der NUI-Focus sauber freigegeben — der Lua-`CloseRadial()`-Call ist dann ein No-Op.
+
+---
+
+## Skillcheck
+
+Ein Punkt läuft einmal um den Ring. Der Spieler drückt die angezeigte Taste, solange der Punkt im hellen Bogen ist. Er kann dabei weiterlaufen. Der erste falsche Druck oder eine Runde ohne Druck lässt den ganzen Check scheitern.
+
+```lua
+local ok = exports.ef_lib:SkillCheck('medium')                          -- eine Stufe, Taste E
+local ok = exports.ef_lib:SkillCheck({ 'easy', 'medium', 'hard' })      -- drei Stufen hintereinander
+local ok = exports.ef_lib:SkillCheck('hard', { 'W', 'A', 'S', 'D' })   -- jede Stufe fragt eine dieser Tasten ab
+local ok = exports.ef_lib:SkillCheck({ { zone = 50, speed = 2.0 } })   -- eigene Stufe: Bogen in Grad, Sekunden pro Runde
+```
+
+| Stufe | Bogen | Sekunden pro Runde |
+|---|---|---|
+| `easy` | 60° | 1,6 |
+| `medium` | 45° | 1,25 |
+| `hard` | 30° | 1,0 |
+| `extreme` | 20° | 0,8 |
+
+`exports.ef_lib:IsSkillCheckActive()` sagt, ob gerade einer läuft, `exports.ef_lib:CancelSkillCheck()` bricht ihn ab (Ergebnis `false`).
+
+---
+
+## Anfragen (Request)
+
+Eine Frage, die der Spieler mit einer Taste beantwortet, ohne dass er die Kontrolle verliert: Einladungen, Durchsuchen, etwas übergeben. Die Tasten sind Key Mappings (Standard `Y` und `N`, siehe `Config.RequestKeys`), Spieler können sie in den FiveM-Tastenbelegungen ändern. Die Anzeige zeigt immer die belegte Taste.
+
+```lua
+-- Client
+local accepted, answer = exports.ef_lib:Request({
+    title = 'Einladung in die Feuerwache 3',
+    message = 'Max Becker lädt dich in die Fraktion Feuerwehr ein.',
+    icon = 'user-plus',        -- optional, Font-Awesome-Name
+    duration = 15000,          -- optional, ms bis zur Zeitüberschreitung (Standard 15000)
+    acceptLabel = 'Beitreten', -- optional
+    declineLabel = 'Nein',     -- optional
+})
+-- accepted: true/false, answer: 'accept' | 'decline' | 'timeout'
+
+-- Server: fragt einen Spieler und wartet auf seine Antwort
+local accepted, answer = exports.ef_lib:Request(targetSource, { title = 'Durchsuchen erlauben?', message = 'Officer Weber möchte dich durchsuchen.' })
+```
+
+Kommt eine Anfrage, während noch eine offen ist, wartet sie, bis die erste beantwortet ist. Verlässt der Spieler den Server, gibt der Server-Export `false, 'timeout'` zurück.
+
+---
+
+## Abklingzeiten (Cooldown)
+
+Auf Client und Server. Die Schlüssel gelten pro aufrufender Resource, zwei Scripts kommen sich mit demselben Namen nicht in die Quere.
+
+```lua
+local free, remaining = exports.ef_lib:Cooldown(('rob:%d'):format(source), 60000)
+if not free then
+    return exports.ef_lib:SendNotification(source, 'error', 'Noch nicht', ('Wieder in %d s'):format(math.ceil(remaining / 1000)))
+end
+
+exports.ef_lib:GetCooldown(key)    -- verbleibende ms, 0 wenn frei
+exports.ef_lib:ClearCooldown(key)  -- sofort freigeben
+```
+
+---
+
+## Cache (Client)
+
+ef_lib prüft alle 100 ms `playerId`, `serverId`, `ped`, `vehicle`, `seat` und `weapon` und meldet jede Änderung als Event. Das ist der günstige Weg, auf Einsteigen oder Waffe ziehen zu reagieren, ohne selbst eine Schleife zu bauen.
+
+```lua
+AddEventHandler('ef_lib:cache', function(key, value, old)
+    if key == 'vehicle' and value then
+        print('Eingestiegen in', value)
+    end
+end)
+
+local vehicle = exports.ef_lib:GetCache('vehicle')  -- false, wenn zu Fuß
+local all = exports.ef_lib:GetCache()
+```
+
+`vehicle`, `seat` und `weapon` sind `false` statt `nil`, wenn es nichts gibt. `GetCache` ist ein Export-Aufruf über Resource-Grenzen hinweg. In Code, der jeden Frame läuft, ist der Native (`PlayerPedId()`) schneller.
+
+---
+
+## Versionscheck (Server)
+
+Druckt beim Start das EmergencyForge-Banner mit Name und Version und meldet in der Konsole, wenn es ein neueres Release gibt. Die eigene Version kommt aus `version` in der `fxmanifest.lua` des aufrufenden Scripts, die neueste aus `https://emergencyforge.de/api/versions/<name>`.
+
+```lua
+-- server.lua deines Scripts
+exports.ef_lib:CheckVersion('Fraktionsgarage')
+-- Heißt der Resource-Ordner anders als das Repo:
+exports.ef_lib:CheckVersion('Fraktionsgarage', 'ef_fraktionsgarage')
+```
+
+Antwortet die Seite nicht oder kennt das Script nicht, kommt nur das Banner.
+
+---
+
+## Sprache
+
+`Config.Locale = 'en'` stellt alle Texte von ef_lib selbst auf Englisch: Knöpfe, Steuerhinweise, Minispiele, Einstellungsmenü und die Konsolenmeldung des Versionschecks. Was dein Script übergibt (Titel, Labels, Meldungen), erscheint unverändert.

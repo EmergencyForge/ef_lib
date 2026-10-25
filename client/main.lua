@@ -564,36 +564,43 @@ end
 
 -- Get the built-in UI Settings submenu (for including in your menus)
 local function GetUISettingsMenu()
+    local function option(value, label) return { value = value, label = L(label) } end
     return {
         id = '_ui_settings',
-        label = 'Oberfläche',
-        description = 'Menüposition und Farbe',
+        label = L('Oberfläche'),
+        description = L('Menüposition und Farbe'),
         submenu = {
-            title = 'Oberfläche',
+            title = L('Oberfläche'),
             items = {
-                { id = '_settings_position', label = 'Menüposition', type = 'select', value = 'left', options = { 'left', 'center', 'right' } },
-                { id = '_settings_color', label = 'Akzentfarbe', type = 'input', value = '#f0500a', placeholder = '#ff0000' },
+                {
+                    id = '_settings_position', label = L('Menüposition'), type = 'select', value = 'left',
+                    options = { option('left', 'Links'), option('center', 'Mitte'), option('right', 'Rechts') }
+                },
+                { id = '_settings_color', label = L('Akzentfarbe'), type = 'input', value = Config.AccentColor, placeholder = '#ff0000' },
                 {
                     id = '_settings_notifications',
-                    label = 'Meldungen',
-                    description = 'Position der Meldungen',
+                    label = L('Meldungen'),
+                    description = L('Position der Meldungen'),
                     submenu = {
-                        title = 'Meldungen',
+                        title = L('Meldungen'),
                         items = {
-                            { id = '_settings_notif_position', label = 'Position', type = 'select', value = 'top-right', options = { 'top-right', 'top-left', 'bottom-right', 'bottom-left' } },
-                            { id = '_settings_notif_test', label = 'Testmeldung', description = 'Zeigt eine Meldung an der gewählten Position' }
+                            {
+                                id = '_settings_notif_position', label = L('Position'), type = 'select', value = 'top-right',
+                                options = { option('top-right', 'Oben rechts'), option('top-left', 'Oben links'), option('bottom-right', 'Unten rechts'), option('bottom-left', 'Unten links') }
+                            },
+                            { id = '_settings_notif_test', label = L('Testmeldung'), description = L('Zeigt eine Meldung an der gewählten Position') }
                         }
                     }
                 },
                 {
                     id = '_settings_reset',
-                    label = 'Zurücksetzen',
-                    description = 'Standardwerte wiederherstellen',
+                    label = L('Zurücksetzen'),
+                    description = L('Standardwerte wiederherstellen'),
                     confirm = {
-                        title = 'Einstellungen zurücksetzen?',
-                        message = 'Position und Farbe gehen auf die Standardwerte zurück.',
-                        confirmLabel = 'Zurücksetzen',
-                        cancelLabel = 'Abbrechen'
+                        title = L('Einstellungen zurücksetzen?'),
+                        message = L('Position und Farbe gehen auf die Standardwerte zurück.'),
+                        confirmLabel = L('Zurücksetzen'),
+                        cancelLabel = L('Abbrechen')
                     }
                 }
             }
@@ -630,7 +637,7 @@ end)
 
 RegisterNUICallback('nuiReady', function(data, cb)
     print('[EF_LIB] NUI is ready')
-    SetConfig({ accentColor = Config.AccentColor })
+    SetConfig({ accentColor = Config.AccentColor, locale = Config.Locale })
     cb('ok')
 end)
 
@@ -1328,6 +1335,89 @@ RegisterNUICallback('radialResult', function(data, cb)
 end)
 
 -----------------------
+-- Skill Check
+-----------------------
+
+local SKILLCHECK_STAGES = {
+    easy = { zone = 60, speed = 1.6 },
+    medium = { zone = 45, speed = 1.25 },
+    hard = { zone = 30, speed = 1.0 },
+    extreme = { zone = 20, speed = 0.8 },
+}
+local skillCheckPromise = nil
+
+--- Quick timing check on a ring while the player keeps moving (blocks current thread)
+--- @param difficulty? string|table 'easy' | 'medium' | 'hard' | 'extreme', a list of them for several stages in a row,
+---   or stages of your own: { zone = degrees of the arc, speed = seconds per lap }
+--- @param keys? string[] Keys the check can ask for (default { 'E' })
+--- @return boolean success
+local function SkillCheck(difficulty, keys)
+    if skillCheckPromise then
+        print('^3[EF_LIB] SkillCheck: Another skill check is already running^0')
+        return false
+    end
+
+    local list = difficulty or 'medium'
+    if type(list) ~= 'table' or not list[1] then list = { list } end
+
+    local stages = {}
+    for i, d in ipairs(list) do
+        local stage = type(d) == 'table' and d or SKILLCHECK_STAGES[d]
+        if not stage then
+            print(('^1[EF_LIB] SkillCheck: Invalid difficulty "%s". Use: easy, medium, hard, extreme^0'):format(tostring(d)))
+            return false
+        end
+        stages[i] = {
+            zone = math.max(5, math.min(180, tonumber(stage.zone) or 45)),
+            speed = math.max(0.3, tonumber(stage.speed) or 1.25),
+        }
+    end
+
+    skillCheckPromise = promise.new()
+
+    -- Keyboard for the NUI, game input stays on so the player can keep walking
+    SetNuiFocus(true, false)
+    SetNuiFocusKeepInput(true)
+    SendNUIMessage({ action = 'openSkillCheck', data = { stages = stages, keys = keys or { 'E' } } })
+
+    CreateThread(function()
+        local pid = PlayerId()
+        while skillCheckPromise do
+            DisableControlAction(0, 24, true)  -- Attack
+            DisableControlAction(0, 25, true)  -- Aim
+            DisableControlAction(0, 38, true)  -- E (pick up)
+            DisableControlAction(0, 46, true)  -- E (talk)
+            DisableControlAction(0, 51, true)  -- E (context)
+            DisableControlAction(0, 140, true) -- Melee Light
+            DisableControlAction(0, 141, true) -- Melee Heavy
+            DisableControlAction(0, 142, true) -- Melee Alternate
+            DisablePlayerFiring(pid, true)
+            Wait(0)
+        end
+    end)
+
+    local success = Citizen.Await(skillCheckPromise)
+    skillCheckPromise = nil
+
+    if isMenuOpen then
+        SetNuiFocus(true, menuHasCursor)
+        SetNuiFocusKeepInput(menuAllowMove)
+    else
+        SetNuiFocus(false, false)
+        SetNuiFocusKeepInput(false)
+    end
+
+    return success
+end
+
+RegisterNUICallback('skillCheckResult', function(data, cb)
+    if skillCheckPromise then
+        skillCheckPromise:resolve(data.success == true)
+    end
+    cb('ok')
+end)
+
+-----------------------
 -- Exports
 -----------------------
 
@@ -1369,6 +1459,11 @@ exports('AlertDialog', AlertDialog)
 
 -- Minigames
 exports('Minigame', Minigame)
+exports('SkillCheck', SkillCheck)
+exports('IsSkillCheckActive', function() return skillCheckPromise ~= nil end)
+exports('CancelSkillCheck', function()
+    if skillCheckPromise then SendNUIMessage({ action = 'cancelSkillCheck' }) end
+end)
 
 -- ProgressBar
 exports('ProgressBar', ProgressBar)

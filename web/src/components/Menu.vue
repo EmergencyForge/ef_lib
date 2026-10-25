@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { resolveIconClass } from '@/composables/icons'
+import { t } from '@/i18n'
 import { onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
-import { useMenuStore, type MenuItem } from '@/stores/menu'
+import { useMenuStore, optionValue, type MenuItem } from '@/stores/menu'
 import { useSettingsStore } from '@/stores/settings'
 import { DEFAULT_ACCENT } from '@/stores/config'
 import { useNotificationStore } from '@/stores/notification'
@@ -9,18 +11,6 @@ import { fetchNui } from '@/composables/useNui'
 const menuStore = useMenuStore()
 const settingsStore = useSettingsStore()
 const notificationStore = useNotificationStore()
-
-// Resolve icon name to FontAwesome class
-// Handles: 'warehouse' → 'fa-solid fa-warehouse', 'fa-car' → 'fa-solid fa-car', 'fa-solid fa-car' → as-is
-function resolveIconClass(icon: string): string {
-  if (!icon) return ''
-  // Already has fa- prefix with style (fa-solid, fa-regular, fa-brands)
-  if (/^fa-(solid|regular|brands|light|thin|duotone) /.test(icon)) return icon
-  // Has fa- prefix but no style
-  if (icon.startsWith('fa-')) return 'fa-solid ' + icon
-  // Plain name like 'warehouse'
-  return 'fa-solid fa-' + icon
-}
 
 const displayItems = computed(() => menuStore.items)
 
@@ -212,7 +202,7 @@ function executeSettingsAction(item: MenuItem) {
       }
       break
     case '_settings_notif_test':
-      notificationStore.addNotification('info', 'Testmeldung', 'So sehen Meldungen an dieser Position aus.', 3000)
+      notificationStore.addNotification('info', t('Testmeldung'), t('So sehen Meldungen an dieser Position aus.'), 3000)
       break
     case '_settings_reset':
       // Perform the actual reset
@@ -222,7 +212,7 @@ function executeSettingsAction(item: MenuItem) {
       menuStore.updateItem('_settings_color', { value: DEFAULT_ACCENT })
       menuStore.updateItem('_settings_notif_position', { value: 'top-right' })
       // Show success notification
-      notificationStore.addNotification('success', 'Zurückgesetzt', 'Position und Farbe stehen wieder auf Standard.', 3000)
+      notificationStore.addNotification('success', t('Zurückgesetzt'), t('Position und Farbe stehen wieder auf Standard.'), 3000)
       break
   }
 }
@@ -432,11 +422,11 @@ onUnmounted(() => {
             <div v-if="item.type === 'select'" class="item-select">
               <span
                 v-for="opt in item.options"
-                :key="opt"
+                :key="optionValue(opt)"
                 class="select-option"
-                :class="{ active: item.value === opt }"
+                :class="{ active: item.value === optionValue(opt) }"
               >
-                {{ opt.charAt(0).toUpperCase() + opt.slice(1) }}
+                {{ typeof opt === 'string' ? opt.charAt(0).toUpperCase() + opt.slice(1) : opt.label }}
               </span>
             </div>
             <!-- Number selector -->
@@ -470,9 +460,9 @@ onUnmounted(() => {
 
         <div class="menu-footer">
           <span class="hint">
-            <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> Navigation</span>
-            <span><kbd class="kbd">Enter</kbd> Auswählen</span>
-            <span><kbd class="kbd">ESC</kbd> Schließen</span>
+            <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> {{ t('Navigation') }}</span>
+            <span><kbd class="kbd">Enter</kbd> {{ t('Auswählen') }}</span>
+            <span><kbd class="kbd">ESC</kbd> {{ t('Schließen') }}</span>
           </span>
         </div>
       </div>

@@ -4,6 +4,14 @@ Config = {}
 -- Examples: '#f0500a' (EmergencyForge orange), '#3b82f6' (Blue), '#22c55e' (Green), '#ef4444' (Red)
 Config.AccentColor = '#f0500a'
 
+-- Language of the built-in texts: 'de' or 'en'
+-- Texts your scripts pass in (titles, labels, messages) are shown as they are
+Config.Locale = 'de'
+
+-- Default keys to answer a Request (invitations and the like)
+-- Players can change them in the FiveM key bindings, this only sets what they start with
+Config.RequestKeys = { accept = 'Y', decline = 'N' }
+
 -- Blur the game behind dialogs, minigames and the radial menu
 -- The NUI cannot blur the game itself, this uses the screen blur effect instead
 Config.ScreenBlur = true

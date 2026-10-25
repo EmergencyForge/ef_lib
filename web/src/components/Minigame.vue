@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/i18n'
 import { ref, computed, watch, onMounted, onUnmounted, type Component } from 'vue'
 import { useMinigameStore } from '@/stores/minigame'
 import { fetchNui } from '@/composables/useNui'
@@ -35,10 +36,10 @@ const progressPct = computed(() => total.value ? (done.value / total.value) * 10
 
 const controls = computed<{ keys: string[]; label: string }[]>(() => {
   switch (store.gameType) {
-    case 'lockpick': return [{ keys: ['Maus halten'], label: 'Spannung' }, { keys: ['SPACE'], label: 'Pin setzen' }]
-    case 'safedial': return [{ keys: ['A', 'D'], label: 'oder Mausrad drehen' }, { keys: ['SPACE'], label: 'Zahl prüfen' }]
-    case 'reactionchain': return [{ keys: (store.params as ReactionParams).keys, label: 'wenn der Ring das Feld trifft' }]
-    case 'wires': return [{ keys: ['Maus'], label: 'Kabel zum passenden Anschluss ziehen' }]
+    case 'lockpick': return [{ keys: [t('Maus halten')], label: t('Spannung') }, { keys: ['SPACE'], label: t('Pin setzen') }]
+    case 'safedial': return [{ keys: ['A', 'D'], label: t('oder Mausrad drehen') }, { keys: ['SPACE'], label: t('Zahl prüfen') }]
+    case 'reactionchain': return [{ keys: (store.params as ReactionParams).keys, label: t('wenn der Ring das Feld trifft') }]
+    case 'wires': return [{ keys: [t('Maus')], label: t('Kabel zum passenden Anschluss ziehen') }]
   }
   return []
 })
@@ -132,7 +133,7 @@ onUnmounted(() => {
         <div class="mg-top mg-stagger" style="--i: 0">
           <div class="mg-timer" :class="{ warn: timerWarn }">{{ timeLeft.toFixed(1) }}<small> s</small></div>
           <div class="mg-meta">
-            <span class="mg-title">{{ store.typeLabel.title }}</span>
+            <span class="mg-title">{{ t(store.typeLabel.title) }}</span>
             <span class="mg-attempts" :class="{ warn: retriesWarn }">
               <template v-if="maxRetries <= 8"><i v-for="n in maxRetries" :key="n" :class="{ off: n > retriesLeft }"></i></template>
               <template v-else>{{ retriesLeft }} Versuche</template>
@@ -157,7 +158,7 @@ onUnmounted(() => {
           <div class="mg-progress-track">
             <div class="mg-progress-fill" :style="{ width: progressPct + '%' }"></div>
           </div>
-          <div class="mg-progress-label">{{ done }} / {{ total }} {{ store.typeLabel.unit }}</div>
+          <div class="mg-progress-label">{{ done }} / {{ total }} {{ t(store.typeLabel.unit) }}</div>
         </div>
 
         <!-- ── RESULT OVERLAY ── -->
@@ -165,7 +166,7 @@ onUnmounted(() => {
           <div v-if="resultVisible" class="mg-result" :class="{ success: resultSuccess, fail: !resultSuccess }">
             <div class="mg-result-content">
               <div class="mg-result-icon"><i :class="resultSuccess ? 'fa-solid fa-check' : 'fa-solid fa-xmark'"></i></div>
-              <div class="mg-result-text">{{ resultSuccess ? 'Geschafft' : 'Fehlgeschlagen' }}</div>
+              <div class="mg-result-text">{{ resultSuccess ? t('Geschafft') : t('Fehlgeschlagen') }}</div>
             </div>
           </div>
         </Transition>
@@ -175,7 +176,7 @@ onUnmounted(() => {
         <span v-for="c in controls" :key="c.label" class="mg-ctrl">
           <kbd v-for="k in c.keys" :key="k" class="kbd">{{ k }}</kbd> {{ c.label }}
         </span>
-        <span class="mg-ctrl"><kbd class="kbd">ESC</kbd> Abbrechen</span>
+        <span class="mg-ctrl"><kbd class="kbd">ESC</kbd> {{ t('Abbrechen') }}</span>
       </div>
     </div>
   </Transition>

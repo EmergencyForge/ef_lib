@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/i18n'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useDialogStore, type InputDialogField } from '@/stores/dialog'
 import { fetchNui } from '@/composables/useNui'
@@ -213,8 +214,8 @@ onUnmounted(() => {
 
         <!-- Footer -->
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="cancel">Abbrechen</button>
-          <button class="btn btn-confirm" @click="confirm">Bestätigen</button>
+          <button class="btn btn-cancel" @click="cancel">{{ t('Abbrechen') }}</button>
+          <button class="btn btn-confirm" @click="confirm">{{ t('Bestätigen') }}</button>
         </div>
       </div>
     </div>

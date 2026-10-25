@@ -1,15 +1,9 @@
 <script setup lang="ts">
+import { resolveIconClass } from '@/composables/icons'
 import { computed } from 'vue'
 import { useHintStore } from '@/stores/hint'
 
 const hintStore = useHintStore()
-
-function resolveIconClass(icon: string): string {
-  if (!icon) return ''
-  if (/^fa-(solid|regular|brands|light|thin|duotone) /.test(icon)) return icon
-  if (icon.startsWith('fa-')) return 'fa-solid ' + icon
-  return 'fa-solid fa-' + icon
-}
 
 const positionClass = computed(() => `pos-${hintStore.position}`)
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/i18n'
 import { onMounted, onUnmounted } from 'vue'
 import { useDialogStore } from '@/stores/dialog'
 import { fetchNui } from '@/composables/useNui'
@@ -75,10 +76,10 @@ onUnmounted(() => {
             class="btn btn-cancel"
             @click="cancel"
           >
-            {{ dialogStore.alertDialogData.cancelLabel || 'Abbrechen' }}
+            {{ dialogStore.alertDialogData.cancelLabel || t('Abbrechen') }}
           </button>
           <button class="btn btn-confirm" @click="confirm">
-            {{ dialogStore.alertDialogData.confirmLabel || 'Bestätigen' }}
+            {{ dialogStore.alertDialogData.confirmLabel || t('Bestätigen') }}
           </button>
         </div>
       </div>

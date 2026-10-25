@@ -1,16 +1,11 @@
 <script setup lang="ts">
+import { resolveIconClass } from '@/composables/icons'
+import { t } from '@/i18n'
 import { onMounted, onUnmounted, computed } from 'vue'
 import { useProgressStore } from '@/stores/progress'
 import { fetchNui } from '@/composables/useNui'
 
 const store = useProgressStore()
-
-function resolveIconClass(icon: string): string {
-  if (!icon) return ''
-  if (/^fa-(solid|regular|brands|light|thin|duotone) /.test(icon)) return icon
-  if (icon.startsWith('fa-')) return 'fa-solid ' + icon
-  return 'fa-solid fa-' + icon
-}
 
 function handleCancel() {
   if (store.cancelProgress()) {
@@ -62,7 +57,7 @@ onUnmounted(() => {
 
       <div v-if="store.canCancel" class="progress-cancel">
         <span class="cancel-key">{{ cancelLabel }}</span>
-        <span class="cancel-text">Abbrechen</span>
+        <span class="cancel-text">{{ t('Abbrechen') }}</span>
       </div>
     </div>
   </Transition>

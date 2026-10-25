@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '@/i18n'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { LockpickParams } from '@/minigames/params'
 import { sfx } from '@/composables/sfx'
@@ -154,7 +155,7 @@ onUnmounted(() => {
         <div v-if="pin" class="band" :style="{ bottom: pin.lo * 100 + '%', height: (pin.hi - pin.lo) * 100 + '%' }"></div>
         <div class="fill" :style="{ transform: `scaleY(${tension})` }"></div>
       </div>
-      <span class="cap">Spannung</span>
+      <span class="cap">{{ t('Spannung') }}</span>
     </div>
 
     <div class="area">

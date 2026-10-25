@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
@@ -26,7 +27,8 @@ export interface MenuItem {
   placeholder?: string
   inputType?: 'text' | 'password' | 'number'
   // For select
-  options?: string[]
+  // Plain values, or { value, label } to show a label other than the value
+  options?: SelectOption[]
   // For number
   min?: number
   max?: number
@@ -37,6 +39,10 @@ export interface MenuItem {
   // For confirmation dialog (true for defaults, or config object)
   confirm?: boolean | ConfirmConfig
 }
+
+export type SelectOption = string | { value: string; label: string }
+
+export const optionValue = (o: SelectOption) => (typeof o === 'string' ? o : o.value)
 
 export interface MenuData {
   title?: string
@@ -188,11 +194,12 @@ export const useMenuStore = defineStore('menu', () => {
   function cycleSelectOption(id: string, direction: 'next' | 'prev' = 'next'): string | null {
     const item = items.value.find(i => i.id === id)
     if (item && item.type === 'select' && item.options && item.options.length > 0) {
-      const currentIdx = item.options.indexOf(item.value || item.options[0])
+      const values = item.options.map(optionValue)
+      const currentIdx = values.indexOf(item.value || values[0])
       let newIdx = direction === 'next' ? currentIdx + 1 : currentIdx - 1
       if (newIdx >= item.options.length) newIdx = 0
       if (newIdx < 0) newIdx = item.options.length - 1
-      item.value = item.options[newIdx]
+      item.value = values[newIdx]
       return item.value
     }
     return null
@@ -204,17 +211,17 @@ export const useMenuStore = defineStore('menu', () => {
 
     // Create confirmation submenu
     const confirmSubmenu: MenuData = {
-      title: config.title || 'Bestätigen',
+      title: config.title || t('Bestätigen'),
       items: [
         {
           id: '_confirm_yes',
-          label: config.confirmLabel || 'Ja',
-          description: config.message || `Are you sure?`
+          label: config.confirmLabel || t('Ja'),
+          description: config.message || t('Bist du sicher?')
         },
         {
           id: '_confirm_no',
-          label: config.cancelLabel || 'Abbrechen',
-          description: 'Go back'
+          label: config.cancelLabel || t('Abbrechen'),
+          description: t('Zurück')
         }
       ]
     }

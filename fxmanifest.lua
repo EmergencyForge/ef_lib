@@ -10,11 +10,15 @@ lua54 'yes'
 ui_page 'web/dist/index.html'
 
 shared_scripts {
-    'config.lua'
+    'config.lua',
+    'shared/locale.lua',
+    'shared/cooldown.lua'
 }
 
 client_scripts {
     'client/main.lua',
+    'client/cache.lua',
+    'client/request.lua',
     'client/vehicleProperties.lua'
 }
 

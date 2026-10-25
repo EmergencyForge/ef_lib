@@ -17,7 +17,12 @@ Das Projekt wird hobbymäßig von **EmergencyForge** entwickelt und ist für jeg
 - **Callback-System** - Synchrone & asynchrone Client-Server-Kommunikation mit automatischem Timeout und Cleanup
 - **Benachrichtigungen** - Toast-Notifications mit den Typen: Success, Error, Warning & Info
 - **Minispiele** - Vier Skillchecks: Schloss knacken mit Spannung, Tresor mit verstecktem Code, Reaktionskette und Kabel verbinden. Vier Stufen oder eigene Werte, Klänge und Ergebnis mit Zeit und Fehlversuchen
+- **Skillcheck** - Timing-Ring wie bei ox_lib, mehrere Stufen hintereinander, der Spieler kann weiterlaufen
+- **Anfragen** - Annehmen oder Ablehnen per Taste, vom Client oder Server aus, etwa für Einladungen
 - **Progressbar** - Fortschrittsanzeige mit Animationen, Prop-Attachment und Steuerungssperren
+- **Abklingzeiten & Cache** - Cooldowns pro Resource auf Client und Server, Events beim Einsteigen oder Waffenwechsel
+- **Versionscheck** - Banner beim Serverstart und Hinweis auf neue Releases für EmergencyForge-Scripts
+- **Deutsch & Englisch** - Eingebaute Texte per `Config.Locale` umschaltbar
 - **Zonen** - Sphere- und Box-Zonen mit onEnter, onExit & inside-Callbacks
 - **Button Hints** - Interaktive Tastaturhinweise (z. B. E, F)
 - **Context Menu** - Kontextmenü-System (ox_lib-kompatibel)
@@ -50,6 +55,8 @@ Das Projekt wird hobbymäßig von **EmergencyForge** entwickelt und ist für jeg
 | Einstellung | Typ | Standard | Beschreibung |
 |---|---|---|---|
 | `Config.AccentColor` | string | `'#f0500a'` | Akzentfarbe der UI (HEX) |
+| `Config.Locale` | string | `'de'` | Sprache der eingebauten Texte (`'de'` oder `'en'`) |
+| `Config.RequestKeys` | table | `{ accept = 'Y', decline = 'N' }` | Standardtasten für Anfragen |
 | `Config.ScreenBlur` | boolean | `true` | Spielbild hinter Dialogen, Minispielen und Radialmenü verwischen |
 | `Config.EnableDemo` | boolean | `false` | Demo-Menü per F2 anzeigen |
 | `Config.ShowCursor` | boolean | `false` | Globale Cursor-Sichtbarkeit |
