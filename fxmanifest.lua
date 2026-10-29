@@ -30,10 +30,13 @@ files {
     'web/dist/**/*'
 }
 
+-- Open source under GPL-3.0: nothing gets encrypted on a Cfx escrow upload
 escrow_ignore {
-    'config.lua',
-    'example.lua',
-    'DOCUMENTATION.md',
-    'fxmanifest.lua',
-    'web/dist/**',
+    '*.lua',
+    '*.md',
+    'client/**',
+    'server/**',
+    'shared/**',
+    'docs/**',
+    'web/**',
 }
