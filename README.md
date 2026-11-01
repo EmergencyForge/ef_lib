@@ -10,6 +10,12 @@ Das Projekt wird hobbymäßig von **EmergencyForge** entwickelt und ist für jeg
 
 ---
 
+## Dokumentation
+
+Anleitungen und die Referenz aller Exports und Events stehen unter [docs.emergencyforge.de/ef-lib](https://docs.emergencyforge.de/ef-lib/). Die [Referenz](https://docs.emergencyforge.de/referenz/ef-lib/) lässt sich durchsuchen und nach Client, Server und Events filtern.
+
+---
+
 ## Features
 
 - **Menüsystem** - Dynamische Menüs mit Buttons, Checkboxen, Inputs, Selects, Nummernfeldern, Untermenüs & Bestätigungen inkl. Suchfunktion

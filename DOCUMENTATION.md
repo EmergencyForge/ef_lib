@@ -1,5 +1,7 @@
 # EF Library - UI Framework Documentation
 
+> Die gepflegte Fassung dieser Doku steht unter [docs.emergencyforge.de/ef-lib](https://docs.emergencyforge.de/ef-lib/), mit einer durchsuchbaren [Referenz aller Exports und Events](https://docs.emergencyforge.de/referenz/ef-lib/). Diese Datei liegt für den Offline-Gebrauch bei und kann hinterherhinken.
+
 ## Installation
 
 1. Kopiere den `ef_lib` Ordner in deinen FiveM `resources` Ordner
