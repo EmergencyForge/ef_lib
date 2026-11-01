@@ -329,7 +329,7 @@ end
 --- Get the closest player to the given coords within radius
 --- @param coords vector3
 --- @param radius number
---- @return number|nil playerId  Player ID (server-side handle), or nil if none in range
+--- @return number|nil playerId  Local player ID (not the server ID), or nil if none in range
 --- @return number|nil ped       Ped entity handle
 --- @return vector3|nil coords   Coords of that ped
 local function GetClosestPlayer(coords, radius)
@@ -524,7 +524,7 @@ end
 local function SetHintPosition(position)
     SendNUIMessage({
         action = 'setHintPosition',
-        data = { position = position or 'bottom-center' }
+        data = { position = position or 'bottom-left' }
     })
 end
 
@@ -1049,6 +1049,15 @@ end)
 
 local progressBarPromise = nil
 local progressBarActive = false
+local progressBarProp = nil
+
+-- Module level so CancelProgressBar and the NUI cancel can reach the prop as well.
+local function DeleteProgressBarProp()
+    if progressBarProp and DoesEntityExist(progressBarProp) then
+        DeleteEntity(progressBarProp)
+    end
+    progressBarProp = nil
+end
 
 --- Open a progressbar that blocks the current thread until completed or cancelled
 --- @param data table ProgressBar config:
@@ -1056,7 +1065,7 @@ local progressBarActive = false
 ---   duration: number       - Duration in ms
 ---   icon?: string          - FontAwesome icon (e.g. 'fa-wrench', 'fa-solid fa-heart')
 ---   canCancel?: boolean    - Allow cancellation (default: false)
----   cancelKey?: string     - Key name for cancel (default: 'X' / INPUT_VEH_DUCK)
+---   cancelKey?: string     - Label shown for the cancel key (default: 'X'), the key itself is always X
 ---   anim?: table           - Animation { dict: string, clip: string, flag?: number, blendIn?: number, blendOut?: number }
 ---   prop?: table           - Prop to attach { model: string, bone?: number, pos?: vec3, rot?: vec3 }
 ---   disableControls?: table - { move?: bool, car?: bool, combat?: bool, mouse?: bool } (default: all false)
@@ -1084,7 +1093,6 @@ local function ProgressBar(data)
     local duration = data.duration
     local canCancel = data.canCancel == true
     local disableControls = data.disableControls or {}
-    local propEntity = nil
 
     -- Start animation if specified
     if data.anim and data.anim.dict and data.anim.clip then
@@ -1110,9 +1118,9 @@ local function ProgressBar(data)
             local rot = data.prop.rot or vector3(0.0, 0.0, 0.0)
             local bone = data.prop.bone or 60309 -- SKEL_R_Hand
 
-            propEntity = CreateObject(modelHash, 0.0, 0.0, 0.0, true, true, true)
+            progressBarProp = CreateObject(modelHash, 0.0, 0.0, 0.0, true, true, true)
             AttachEntityToEntity(
-                propEntity, ped,
+                progressBarProp, ped,
                 GetPedBoneIndex(ped, bone),
                 pos.x, pos.y, pos.z,
                 rot.x, rot.y, rot.z,
@@ -1151,27 +1159,21 @@ local function ProgressBar(data)
                 if data.anim then
                     StopAnimTask(ped, data.anim.dict, data.anim.clip, 1.0)
                 end
-                if propEntity and DoesEntityExist(propEntity) then
-                    DeleteEntity(propEntity)
-                    propEntity = nil
-                end
+                DeleteProgressBarProp()
                 if progressBarPromise then
                     progressBarPromise:resolve(true)
                 end
                 return
             end
 
-            -- Cancel detection (47 = INPUT_VEH_DUCK / X key)
+            -- 73 = INPUT_VEH_DUCK (X). cancelKey only changes the label shown in the UI.
             if canCancel and IsControlJustPressed(0, 73) then
                 progressBarActive = false
                 SendNUIMessage({ action = 'cancelProgressBar' })
                 if data.anim then
                     StopAnimTask(ped, data.anim.dict, data.anim.clip, 1.0)
                 end
-                if propEntity and DoesEntityExist(propEntity) then
-                    DeleteEntity(propEntity)
-                    propEntity = nil
-                end
+                DeleteProgressBarProp()
                 if progressBarPromise then
                     progressBarPromise:resolve(false)
                 end
@@ -1224,6 +1226,7 @@ RegisterNUICallback('progressBarResult', function(data, cb)
         progressBarActive = false
         local ped = PlayerPedId()
         ClearPedTasks(ped)
+        DeleteProgressBarProp()
         if progressBarPromise then
             progressBarPromise:resolve(false)
         end
@@ -1269,6 +1272,7 @@ local function CancelProgressBar()
 
     local ped = PlayerPedId()
     ClearPedTasks(ped)
+    DeleteProgressBarProp()
 
     if progressBarPromise then
         progressBarPromise:resolve(false)
@@ -1287,7 +1291,7 @@ local radialOpen = false
 --- Open a radial wheel for quick actions. Hold-to-trigger pattern:
 --- call OpenRadial(...) on key-down, CloseRadial() on key-up — the
 --- onSelect callback fires with the id of the item the cursor was on
---- when the key was released (or with nil if no slice was active).
+--- when the key was released. If no slice was active, onSelect is not called.
 --- @param data table { items: { id, label, icon? }[], onSelect: function(id) }
 local function OpenRadial(data)
     if radialOpen then return end
