@@ -142,7 +142,7 @@ TriggerClientEvent('ef_lib:notify', -1, 'info', 'Titel', 'Nachricht', 5000)
 - Mehrere Notifications werden untereinander gestapelt mit einem Abstand von `12px`
 - Breite: mindestens `340px`, maximal `400px`
 - FontAwesome-Icons je Typ: `fa-circle-check`, `fa-circle-xmark`, `fa-triangle-exclamation`, `fa-circle-info`
-- Bei `duration: 0` bleibt die Notification dauerhaft sichtbar, bis sie programmatisch entfernt wird (siehe NotificationStore)
+- Bei `duration: 0` bleibt die Notification dauerhaft sichtbar. Einen Export zum Entfernen gibt es nicht, sie verschwindet erst, wenn ef_lib neu startet. Für Hinweise, die wieder weg sollen, besser `ShowHint`/`HideHint` nutzen.
 
 ---
 

@@ -30,14 +30,14 @@ Config.RequestKeys = { accept = 'Y', decline = 'N' }
 -- Die NUI kann das Spiel selbst nicht verwischen, dafür nutzt ef_lib den Screen-Blur von GTA
 Config.ScreenBlur = true
 
--- Demo-Menü aktivieren (in Produktion auf false setzen)
-Config.EnableDemo = true
+-- Demo-Menü aktivieren (nur zum Ausprobieren, in Produktion false lassen)
+Config.EnableDemo = false
 
 -- Maus-Cursor in Menüs anzeigen (globaler Standard)
 -- true = Maus + Tastatur (Cursor sichtbar, Items klickbar)
 -- false = Nur Tastatur (kein Cursor, Spieler behält Kamerasteuerung)
 -- Kann pro Menü überschrieben werden: OpenMenu({ showCursor = true/false })
-Config.ShowCursor = true
+Config.ShowCursor = false
 
 -- Spielerbewegung während Menü erlauben (globaler Standard)
 -- true = Spieler kann sich bewegen/umsehen während Menü offen ist
@@ -64,8 +64,8 @@ Config.MenuKey = 'F2'
 
 | Wert | Steuerung | Beschreibung |
 |------|-----------|-------------|
-| `true` | Maus + Tastatur | Cursor sichtbar, Items klickbar. Standard-Verhalten. |
-| `false` | Nur Tastatur | Kein Cursor, Spieler behält Kamerasteuerung (z.B. für Kleidung/Wardrobe-Menüs). |
+| `true` | Maus + Tastatur | Cursor sichtbar, Items klickbar. |
+| `false` | Nur Tastatur | Kein Cursor, Spieler behält Kamerasteuerung (z.B. für Kleidung/Wardrobe-Menüs). Wert in der mitgelieferten `config.lua`. |
 
 Dies ist der **globale Standard** für alle Menüs. Einzelne Menüs können den Wert mit `showCursor` überschreiben:
 
@@ -77,7 +77,7 @@ exports.ef_lib:OpenMenu({ title = 'Normal', items = { ... } })
 exports.ef_lib:OpenMenu({ title = 'Wardrobe', showCursor = false, items = { ... } })
 ```
 
-**Priorität:** `menuData.showCursor` (wenn gesetzt) > `Config.ShowCursor` > `true` (Fallback)
+**Priorität:** `menuData.showCursor` (wenn gesetzt) > `Config.ShowCursor` > `true` (Fallback, wenn `Config.ShowCursor` fehlt)
 
 ### Bewegungssteuerung (`Config.AllowMove`)
 
@@ -203,7 +203,7 @@ exports.ef_lib:OpenMenu({
 | `showCursor` | boolean | `Config.ShowCursor` | Maus-Cursor anzeigen. Überschreibt den globalen `Config.ShowCursor` Wert. Auf `false` setzen für Menüs die Kamerasteuerung brauchen (z.B. Kleidung/Wardrobe) |
 | `allowMove` | boolean | `Config.AllowMove` | Spielerbewegung erlauben. Überschreibt den globalen `Config.AllowMove` Wert. Auf `false` setzen um den Spieler einzufrieren. |
 
-**Hinweis:** Bei `showCursor = false` behält der Spieler die Maus-/Kamerasteuerung. Navigation erfolgt über Tastatur (Pfeiltasten / WASD).
+**Hinweis:** Bei `showCursor = false` behält der Spieler die Maus-/Kamerasteuerung. Navigation erfolgt über die Pfeiltasten, Enter und Backspace.
 
 ### Menü schließen
 
@@ -236,13 +236,14 @@ exports.ef_lib:UpdateMenuItem('item_id', {
 
 ### Menü Navigation (programmatisch)
 
-Erlaubt es, das Menü von außen zu navigieren (z.B. über WASD-Forwarding vom Game Client).
+Erlaubt es, das Menü von außen zu navigieren, zum Beispiel mit WASD über das Event `ef_lib:keyPress` (siehe Tastenkombinationen).
 
 ```lua
 exports.ef_lib:NavigateMenu('up')     -- Nach oben
 exports.ef_lib:NavigateMenu('down')   -- Nach unten
 exports.ef_lib:NavigateMenu('left')   -- Links / Wert verringern / Zurück
 exports.ef_lib:NavigateMenu('right')  -- Rechts / Wert erhöhen / Aktivieren
+exports.ef_lib:NavigateMenu('select') -- Aktuelles Item aktivieren
 exports.ef_lib:NavigateMenu('back')   -- Zurück zum vorherigen Menü
 exports.ef_lib:NavigateMenu('close')  -- Menü schließen
 ```
@@ -260,7 +261,7 @@ Normaler klickbarer Menüeintrag mit Pfeil-Indikator.
     id = 'unique_id',           -- Eindeutige ID (erforderlich)
     label = 'Button Text',      -- Angezeigter Text (erforderlich)
     description = 'Info Text',  -- Beschreibung unter dem Label (optional)
-    icon = '🎮',                -- Emoji Icon (optional)
+    icon = 'gamepad',           -- Font-Awesome-Name (optional, z.B. 'gamepad' oder 'fa-solid fa-gamepad')
     disabled = false,           -- Deaktiviert (optional)
     data = { custom = 'data' }  -- Eigene Daten (optional)
 }
@@ -505,15 +506,21 @@ exports.ef_lib:OpenMenu({
 
 | Taste | Funktion |
 |-------|----------|
-| ↑ / W | Nach oben navigieren |
-| ↓ / S | Nach unten navigieren |
-| Enter / → / D | Item aktivieren / Submenu öffnen |
-| ← / A | Zahlenwert verringern (bei Number-Typ) / Zurück |
-| → / D | Zahlenwert erhöhen (bei Number-Typ) |
+| ↑ | Nach oben navigieren |
+| ↓ | Nach unten navigieren |
+| Enter / → | Item aktivieren / Submenu öffnen |
+| ← | Zahlenwert verringern (bei Number-Typ) / Zurück |
+| → | Zahlenwert erhöhen (bei Number-Typ) |
 | ESC / Backspace | Zurück (im Submenu) / Menü schließen |
-| / | Suche öffnen (bei >5 Items) |
 
-**Hinweis:** Bei `showCursor = false` werden WASD-Tasten als Navigation an das Menü weitergeleitet, gleichzeitig werden sie an den Game Client durchgereicht (z.B. für Kamerasteuerung).
+**Hinweis:** WASD bewegt das Menü nicht von selbst. Hat das Menü den Fokus, löst W, A, S oder D das Client-Event `ef_lib:keyPress` mit dem Buchstaben aus. Wer WASD zur Navigation will, leitet das selbst weiter:
+
+```lua
+AddEventHandler('ef_lib:keyPress', function(key)
+    local map = { w = 'up', s = 'down', a = 'left', d = 'right' }
+    if map[key] then exports.ef_lib:NavigateMenu(map[key]) end
+end)
+```
 
 ---
 
@@ -815,7 +822,7 @@ local completed = exports.ef_lib:ProgressBar({
     duration = 8000,                         -- Dauer in Millisekunden
     icon = 'fa-wrench',                      -- FontAwesome Icon (optional)
     canCancel = true,                        -- Abbrechbar mit X-Taste (default: false)
-    cancelKey = 'X',                         -- Cancel-Taste (default: 'X')
+    cancelKey = 'X',                         -- Nur die angezeigte Beschriftung (default: 'X'), abgebrochen wird immer mit X
     anim = {                                 -- Animation (optional)
         dict = 'mini@repair',
         clip = 'fixing_a_player',
@@ -1117,7 +1124,7 @@ local zone = exports.ef_lib:CreateSphereZone({
         exports.ef_lib:HideHint('zone_hint')
     end,
     inside = function(self)
-        -- Wird jeden Tick aufgerufen solange der Spieler in der Zone ist
+        -- Wird alle 300 ms aufgerufen, solange der Spieler in der Zone ist
     end,
 })
 
