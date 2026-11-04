@@ -47,12 +47,14 @@ onUnmounted(() => {
 <template>
   <Transition name="progress">
     <div v-if="store.visible && store.style === 'bar'" class="progress-container">
-      <div class="progress-pill glass">
-        <div class="progress-fill" :style="{ clipPath: `inset(0 ${100 - store.progress * 100}% 0 0 round 22px)` }"></div>
+      <div class="progress-card panel">
         <div class="progress-content">
           <i v-if="store.icon" class="progress-icon" :class="resolveIconClass(store.icon)"></i>
           <span class="progress-label">{{ store.label }}</span>
           <span class="progress-time">{{ remainingSeconds }} s</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" :style="{ clipPath: `inset(0 ${100 - store.progress * 100}% 0 0 round 3px)` }"></div>
         </div>
       </div>
 
@@ -78,51 +80,37 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-.progress-pill {
-  width: 420px;
-  height: 52px;
-  border-radius: 26px;
-  overflow: hidden;
+.progress-card {
+  width: 380px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
 }
 
 /* Full-width fill revealed by clip-path, so the rounded ends never squash */
 .progress-fill {
-  position: absolute;
-  inset: 4px;
-  border-radius: 22px;
-  overflow: hidden;
+  height: 100%;
+  border-radius: 3px;
   background: var(--accent-color);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 65%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
   transition: clip-path 0.08s linear;
 }
 
-.progress-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
-  background-size: 200% 100%;
-  animation: sheen 1.6s linear infinite;
-}
-
-@keyframes sheen {
-  from { background-position: 150% 0; }
-  to { background-position: -50% 0; }
-}
-
 .progress-content {
-  position: absolute;
-  inset: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 20px;
   color: var(--text);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .progress-icon {
+  color: var(--accent-color);
   font-size: 14px;
   line-height: 1;
 }
@@ -132,8 +120,8 @@ onUnmounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .progress-time {
@@ -151,9 +139,9 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 4px 12px 4px 4px;
-  border-radius: var(--radius-pill);
-  background: rgba(10, 10, 12, 0.55);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-ctl);
+  background: var(--surface);
+  box-shadow: var(--rim);
   pointer-events: auto;
   cursor: pointer;
 }
@@ -165,9 +153,9 @@ onUnmounted(() => {
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
-  border-radius: 10px;
-  background: var(--fill-3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--text);
   font-size: 11px;
   font-weight: 600;

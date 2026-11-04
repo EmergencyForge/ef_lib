@@ -122,7 +122,7 @@ onUnmounted(() => {
 <template>
   <Transition name="dialog" :duration="{ enter: 550, leave: 180 }">
     <div v-if="dialogStore.inputDialogVisible" class="dialog-overlay" ref="containerRef" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
-      <div class="dialog-modal glass">
+      <div class="dialog-modal panel">
         <!-- Header -->
         <div class="dialog-header">
           <h2 class="dialog-title">{{ dialogStore.inputDialogTitle }}</h2>
@@ -296,37 +296,37 @@ onUnmounted(() => {
 }
 
 .dialog-modal {
-  width: 460px;
+  width: 380px;
   max-height: 80vh;
-  padding: 8px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 8px 12px 16px;
+  padding: 10px 10px 10px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--divider);
 }
 
 .dialog-title {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.01em;
   color: var(--text);
   margin: 0;
 }
 
 .dialog-close {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  background: var(--fill-2);
-  box-shadow: var(--ctl-rim);
-  color: var(--text-2);
+  border-radius: 4px;
+  background: none;
+  color: var(--text-3);
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
@@ -351,10 +351,10 @@ onUnmounted(() => {
 .dialog-fields {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 16px 16px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .field-group {
@@ -375,7 +375,7 @@ onUnmounted(() => {
 }
 
 .field-description {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-3);
   margin-top: -2px;
 }
@@ -384,21 +384,20 @@ onUnmounted(() => {
 .field-input,
 .field-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: none;
   border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
   color: var(--text);
-  font-size: 14px;
+  font-size: 13px;
   outline: none;
-  transition: box-shadow 0.15s ease, background 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .field-input:focus,
 .field-textarea:focus {
-  background: rgba(0, 0, 0, 0.36);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--accent-color), 0 0 0 3px rgba(var(--accent-rgb), 0.2);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .field-input::placeholder,
@@ -427,12 +426,11 @@ onUnmounted(() => {
 
 .checkbox-box {
   position: relative;
-  width: 40px;
-  height: 24px;
+  width: 30px;
+  height: 18px;
   flex-shrink: 0;
   border-radius: var(--radius-pill);
   background: var(--fill-3);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   transition: background 0.2s ease;
 }
 
@@ -441,21 +439,19 @@ onUnmounted(() => {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s var(--ease);
 }
 
 .checkbox-box.checked {
   background: var(--accent-color);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .checkbox-box.checked::after {
-  transform: translateX(16px);
+  transform: translateX(12px);
 }
 
 .checkbox-label {
@@ -466,32 +462,32 @@ onUnmounted(() => {
 /* Select */
 .field-select {
   width: 100%;
-  padding: 10px 36px 10px 12px;
+  padding: 8px 32px 8px 10px;
   border: none;
   border-radius: var(--radius-ctl);
-  background-color: var(--fill-2);
-  box-shadow: var(--ctl-rim);
+  background-color: var(--well);
+  box-shadow: var(--rim);
   color: var(--text);
-  font-size: 14px;
+  font-size: 13px;
   outline: none;
   appearance: none;
   cursor: pointer;
   transition: box-shadow 0.15s ease, background-color 0.15s ease;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.55)' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
+  background-position: right 10px center;
 }
 
 .field-select:hover {
-  background-color: var(--fill-3);
+  background-color: var(--surface-2);
 }
 
 .field-select:focus {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px var(--accent-color), 0 0 0 3px rgba(var(--accent-rgb), 0.2);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .field-select option {
-  background: #1b1b1e;
+  background: var(--surface);
   color: #ffffff;
 }
 
@@ -508,19 +504,17 @@ onUnmounted(() => {
   -webkit-appearance: none;
   appearance: none;
   border-radius: var(--radius-pill);
-  background: linear-gradient(90deg, var(--accent-color) var(--pct, 0%), rgba(0, 0, 0, 0.3) var(--pct, 0%));
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  background: linear-gradient(90deg, var(--accent-color) var(--pct, 0%), var(--line) var(--pct, 0%));
   outline: none;
 }
 
 .field-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: transform 0.15s var(--ease);
 }
@@ -531,10 +525,10 @@ onUnmounted(() => {
 
 .slider-value {
   min-width: 44px;
-  padding: 4px 8px;
-  border-radius: var(--radius-pill);
+  padding: 3px 8px;
+  border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
   text-align: center;
   font-size: 12px;
   font-weight: 600;
@@ -549,10 +543,10 @@ onUnmounted(() => {
 }
 
 .color-tile {
-  height: 34px;
+  height: 30px;
   padding: 0;
   border: none;
-  border-radius: 9px;
+  border-radius: var(--radius-ctl);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   cursor: pointer;
   transition: transform 0.3s var(--spring), box-shadow 0.2s ease;
@@ -564,7 +558,7 @@ onUnmounted(() => {
 
 .color-tile.on {
   transform: scale(1.12);
-  box-shadow: 0 0 0 2px var(--text), 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2px var(--text);
 }
 
 /* Multi-select tiles */
@@ -584,9 +578,9 @@ onUnmounted(() => {
   justify-content: center;
   gap: 5px;
   border: none;
-  border-radius: 12px;
-  background: var(--fill-1);
-  box-shadow: var(--ctl-rim);
+  border-radius: var(--radius-ctl);
+  background: var(--well);
+  box-shadow: var(--rim);
   color: var(--text-2);
   font: inherit;
   font-size: 12px;
@@ -595,7 +589,7 @@ onUnmounted(() => {
 }
 
 .tile:hover {
-  background: var(--fill-2);
+  background: var(--surface-2);
 }
 
 .tile-icon {
@@ -627,8 +621,8 @@ onUnmounted(() => {
 }
 
 .tile.on {
-  background: rgba(var(--accent-rgb), 0.18);
-  box-shadow: inset 0 0 0 1.5px var(--accent-color);
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
   color: var(--text);
 }
 
@@ -645,38 +639,36 @@ onUnmounted(() => {
 
 .dialog-footer {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 12px 8px 8px;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--surface-2);
   border-top: 1px solid var(--divider);
 }
 
 .btn {
-  height: 40px;
+  flex: 1;
+  height: 34px;
   padding: 0 20px;
   border: none;
   border-radius: var(--radius-ctl);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, filter 0.15s ease;
 }
 
 .btn-cancel {
-  background: var(--fill-2);
+  background: var(--surface-3);
   color: var(--text);
-  box-shadow: var(--ctl-rim);
 }
 
 .btn-cancel:hover {
-  background: var(--fill-3);
+  background: var(--line-2);
 }
 
 .btn-confirm {
   background: var(--accent-color);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
   color: var(--on-accent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px -6px rgba(var(--accent-rgb), 0.7);
 }
 
 .btn-confirm:hover {

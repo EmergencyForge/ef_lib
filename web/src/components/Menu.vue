@@ -372,10 +372,10 @@ onUnmounted(() => {
 <template>
   <Transition name="menu" :duration="{ enter: 600, leave: 200 }">
     <div v-if="menuStore.isVisible" class="menu-container" :class="`position-${settingsStore.menuPosition}`">
-      <div class="menu glass">
+      <div class="menu panel">
         <div class="menu-header">
           <h2 class="menu-title">{{ menuStore.title }}</h2>
-
+          <p v-if="menuStore.subtitle" class="menu-subtitle">{{ menuStore.subtitle }}</p>
         </div>
 
         <div class="menu-items" :class="{ 'no-mouse': !menuStore.cursorEnabled }">
@@ -384,7 +384,6 @@ onUnmounted(() => {
             :key="item.id"
             class="menu-item"
             :class="{
-              'glass-active': index === menuStore.selectedIndex,
               selected: index === menuStore.selectedIndex,
               disabled: item.disabled,
               readonly: item.readonly
@@ -460,7 +459,6 @@ onUnmounted(() => {
 
         <div class="menu-footer">
           <span class="hint">
-            <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> {{ t('Navigation') }}</span>
             <span><kbd class="kbd">Enter</kbd> {{ t('Auswählen') }}</span>
             <span><kbd class="kbd">ESC</kbd> {{ t('Schließen') }}</span>
           </span>
@@ -485,46 +483,50 @@ onUnmounted(() => {
 .menu-container.position-left {
   justify-content: flex-start;
   padding-left: 56px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 40%, transparent 70%);
 }
 
 /* Position: Center */
 .menu-container.position-center {
   justify-content: center;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.15) 70%);
 }
 
 /* Position: Right */
 .menu-container.position-right {
   justify-content: flex-end;
   padding-right: 56px;
-  background: linear-gradient(270deg, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.15) 40%, transparent 70%);
 }
 
 .menu {
-  width: 400px;
+  width: 340px;
   max-height: 80vh;
-  padding: 10px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .menu-header {
-  padding: 12px 12px 14px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--divider);
 }
 
 .menu-title {
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.01em;
   color: var(--text);
+}
+
+.menu-subtitle {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--text-3);
 }
 
 .menu-items {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  padding: 4px;
   overflow-y: auto;
 }
 
@@ -538,12 +540,16 @@ onUnmounted(() => {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 52px;
-  padding: 10px 12px;
+  gap: 10px;
+  min-height: 40px;
+  padding: 5px 10px;
   border-radius: var(--radius-ctl);
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease;
   cursor: pointer;
+}
+
+.menu-item.selected {
+  background: var(--surface-3);
 }
 
 .menu-item.disabled {
@@ -556,22 +562,18 @@ onUnmounted(() => {
 }
 
 .item-icon {
-  width: 32px;
-  height: 32px;
+  width: 18px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--fill-2);
-  border-radius: 8px;
   color: var(--text-2);
-  font-size: 14px;
-  transition: background 0.15s ease, color 0.15s ease;
+  font-size: 13px;
+  transition: color 0.15s ease;
 }
 
 .menu-item.selected .item-icon {
-  background: var(--accent-color);
-  color: var(--on-accent);
+  color: var(--text);
 }
 
 .item-content {
@@ -579,17 +581,17 @@ onUnmounted(() => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .item-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text);
 }
 
 .item-description {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-3);
 }
 
@@ -611,12 +613,11 @@ onUnmounted(() => {
 /* Checkbox as switch */
 .item-checkbox {
   position: relative;
-  width: 40px;
-  height: 24px;
+  width: 30px;
+  height: 18px;
   flex-shrink: 0;
   border-radius: var(--radius-pill);
   background: var(--fill-3);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   transition: background 0.2s ease;
 }
 
@@ -625,21 +626,19 @@ onUnmounted(() => {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s var(--ease);
 }
 
 .item-checkbox.checked {
   background: var(--accent-color);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .item-checkbox.checked::after {
-  transform: translateX(16px);
+  transform: translateX(12px);
 }
 
 /* Select as segmented control */
@@ -647,23 +646,22 @@ onUnmounted(() => {
   display: flex;
   flex-shrink: 0;
   padding: 3px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
 }
 
 .select-option {
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
   color: var(--text-3);
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .select-option.active {
-  background: var(--fill-3);
+  background: var(--surface-3);
   color: var(--text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* Number selector */
@@ -672,20 +670,20 @@ onUnmounted(() => {
   align-items: center;
   flex-shrink: 0;
   padding: 3px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
 }
 
 .number-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: 4px;
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
@@ -698,9 +696,9 @@ onUnmounted(() => {
 }
 
 .number-value {
-  min-width: 34px;
+  min-width: 30px;
   text-align: center;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -713,13 +711,13 @@ onUnmounted(() => {
 
 .item-input {
   width: 130px;
-  height: 30px;
+  height: 28px;
   margin-left: auto;
   padding: 0 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
   color: var(--text);
   font-size: 13px;
   outline: none;
@@ -732,7 +730,7 @@ onUnmounted(() => {
 }
 
 .item-input:focus {
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--accent-color);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .item-input:disabled {
@@ -741,8 +739,8 @@ onUnmounted(() => {
 }
 
 .menu-footer {
-  margin-top: 8px;
-  padding: 12px 12px 4px;
+  padding: 9px 14px;
+  background: var(--surface-2);
   border-top: 1px solid var(--divider);
 }
 

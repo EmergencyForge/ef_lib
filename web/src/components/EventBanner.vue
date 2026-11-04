@@ -39,7 +39,7 @@ useNuiEvent('showBanner', (data: BannerData) => {
 
 <template>
   <Transition name="bn">
-    <div v-if="banner" :key="session" class="bn glass">
+    <div v-if="banner" :key="session" class="bn panel">
       <div class="bn-medal"><i :class="resolveIconClass(banner.icon || 'fa-medal')"></i></div>
       <div class="bn-title">{{ banner.title }}</div>
       <div v-if="banner.message" class="bn-message">{{ banner.message }}</div>
@@ -58,10 +58,9 @@ useNuiEvent('showBanner', (data: BannerData) => {
   top: 22vh;
   left: 50%;
   z-index: 950;
-  width: 420px;
-  margin-left: -210px;
-  padding: 26px 24px 22px;
-  border-radius: 22px;
+  width: 360px;
+  margin-left: -180px;
+  padding: 20px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -70,41 +69,28 @@ useNuiEvent('showBanner', (data: BannerData) => {
   pointer-events: none;
 }
 
-/* Light sweep once over the card */
-.bn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.14) 50%, transparent 65%);
-  transform: translateX(-100%);
-  animation: bn-sweep 1.2s ease 0.5s both;
-}
-
 .bn-medal {
-  width: 58px;
-  height: 58px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 22px;
+  font-size: 18px;
   color: var(--on-accent);
   background: var(--accent-color);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 70%);
-  box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.15), 0 0 30px rgba(var(--accent-rgb), 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   animation: bn-pop 0.6s var(--spring) 0.2s both;
 }
 
 .bn-title {
-  margin-top: 14px;
-  font-size: 22px;
+  margin-top: 12px;
+  font-size: 18px;
   font-weight: 600;
-  letter-spacing: -0.01em;
   color: var(--text);
 }
 
 .bn-message {
   margin-top: 4px;
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--text-2);
 }
 
@@ -112,16 +98,15 @@ useNuiEvent('showBanner', (data: BannerData) => {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 6px;
+  margin-top: 14px;
 }
 
 .bn-stats span {
-  padding: 6px 12px;
-  border-radius: 10px;
-  background: var(--fill-2);
-  box-shadow: var(--ctl-rim);
-  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-ctl);
+  background: var(--surface-3);
+  font-size: 12px;
   color: var(--text-2);
   animation: bn-fade 0.5s ease both;
 }
@@ -130,10 +115,6 @@ useNuiEvent('showBanner', (data: BannerData) => {
   margin-left: 2px;
   color: var(--text);
   font-variant-numeric: tabular-nums;
-}
-
-@keyframes bn-sweep {
-  to { transform: translateX(100%); }
 }
 
 @keyframes bn-pop {

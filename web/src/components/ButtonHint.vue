@@ -15,7 +15,7 @@ const isHorizontal = computed(() =>
 <template>
   <Transition name="hints-container">
     <div v-if="hintStore.hints.length > 0" class="hints-container" :class="positionClass">
-      <TransitionGroup name="hint" tag="div" class="hints-list glass" :class="{ horizontal: isHorizontal, vertical: !isHorizontal }">
+      <TransitionGroup name="hint" tag="div" class="hints-list panel" :class="{ horizontal: isHorizontal, vertical: !isHorizontal }">
         <div
           v-for="hint in hintStore.hints"
           :key="hint.id || hint.key"
@@ -74,11 +74,10 @@ const isHorizontal = computed(() =>
   right: 40px;
 }
 
-/* ─── One glass bar, hints are its segments ─── */
+/* ─── One bar, hints are its segments ─── */
 .hints-list {
   display: flex;
-  padding: 5px;
-  border-radius: 23px;
+  padding: 4px;
 }
 
 .hints-list.horizontal {
@@ -89,51 +88,54 @@ const isHorizontal = computed(() =>
 .hints-list.vertical {
   flex-direction: column;
   align-items: stretch;
-  border-radius: 18px;
+  min-width: 230px;
+  padding: 8px 12px;
 }
 
 .hint-item {
   display: flex;
   align-items: center;
   gap: 9px;
-  height: 36px;
-  padding: 0 14px 0 6px;
+  height: 30px;
+  padding: 0 12px 0 4px;
   white-space: nowrap;
 }
 
 .horizontal .hint-item + .hint-item {
   border-left: 1px solid var(--divider);
-  padding-left: 14px;
+  padding-left: 12px;
 }
 
-.vertical .hint-item + .hint-item {
-  border-top: 1px solid var(--divider);
+/* A list of keys: label left, key right */
+.vertical .hint-item {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0;
 }
 
 .hint-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 26px;
-  height: 26px;
-  padding: 0 7px;
-  border-radius: 8px;
-  font-size: 12px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
 }
 
 .hint-key {
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 0 rgba(0, 0, 0, 0.35);
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--text);
   text-transform: uppercase;
 }
 
 .hint-icon {
-  background: rgba(var(--accent-rgb), 0.25);
-  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.35);
-  color: var(--accent-color);
+  color: var(--text-2);
 }
 
 .hint-icon i {
@@ -142,9 +144,9 @@ const isHorizontal = computed(() =>
 }
 
 .hint-label {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--text-2);
 }
 
 /* ─── Container: the bar opens from its centre ─── */
@@ -163,11 +165,11 @@ const isHorizontal = computed(() =>
 }
 
 .hints-container-enter-from .hints-list {
-  clip-path: inset(0 50% 0 50% round 23px);
+  clip-path: inset(0 50% 0 50% round 8px);
 }
 
 .hints-container-enter-from .vertical.hints-list {
-  clip-path: inset(0 0 100% 0 round 18px);
+  clip-path: inset(0 0 100% 0 round 8px);
 }
 
 .hints-container-enter-from,

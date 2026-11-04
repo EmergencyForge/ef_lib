@@ -22,7 +22,7 @@ function getIcon(type: Notification['type']): string {
       <div
         v-for="notification in notificationStore.notifications"
         :key="notification.id"
-        class="notification glass"
+        class="notification panel"
         :class="notification.type"
       >
         <div class="notification-body">
@@ -36,9 +36,6 @@ function getIcon(type: Notification['type']): string {
             </div>
           </div>
         </div>
-        <div class="notification-timer">
-          <div class="notification-timer-bar" :style="{ animationDuration: `${notification.duration}ms` }"></div>
-        </div>
       </div>
     </TransitionGroup>
   </div>
@@ -49,7 +46,7 @@ function getIcon(type: Notification['type']): string {
   position: fixed;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   z-index: 9999;
   pointer-events: none;
 }
@@ -77,52 +74,29 @@ function getIcon(type: Notification['type']): string {
   flex-direction: column-reverse;
 }
 
-.notification.success { --c: var(--ok);     --c-rgb: var(--ok-rgb); }
-.notification.error   { --c: var(--danger); --c-rgb: var(--danger-rgb); }
-.notification.warning { --c: var(--warn);   --c-rgb: var(--warn-rgb); }
-.notification.info    { --c: var(--info);   --c-rgb: var(--info-rgb); }
+.notification.success { --c: var(--ok); }
+.notification.error   { --c: var(--danger); }
+.notification.warning { --c: var(--warn); }
+.notification.info    { --c: var(--info); }
 
 .notification {
-  width: 380px;
+  width: 300px;
   overflow: hidden;
   pointer-events: auto;
 }
 
-/* Type colour bleeding into the glass from the leading edge */
-.notification::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: radial-gradient(70% 140% at 0% 50%, rgba(var(--c-rgb), 0.26), transparent 70%);
-}
-
-.notification::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 14px;
-  bottom: 14px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--c);
-  box-shadow: 0 0 12px var(--c);
-}
-
 .notification-body {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 14px 16px 20px 20px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
 }
 
 .notification-icon {
   flex-shrink: 0;
-  margin-top: 1px;
   color: var(--c);
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1;
-  filter: drop-shadow(0 0 8px rgba(var(--c-rgb), 0.6));
 }
 
 .notification-icon i {
@@ -136,42 +110,16 @@ function getIcon(type: Notification['type']): string {
 }
 
 .notification-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text);
 }
 
 .notification-message {
-  margin-top: 3px;
-  font-size: 13px;
+  font-size: 11.5px;
   line-height: 1.45;
   color: var(--text-2);
-}
-
-.notification-timer {
-  position: absolute;
-  left: 20px;
-  right: 16px;
-  bottom: 8px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--fill-2);
-  overflow: hidden;
-}
-
-/* scaleX instead of width: runs on the compositor */
-.notification-timer-bar {
-  height: 100%;
-  width: 100%;
-  background: var(--c);
-  transform-origin: left;
-  animation: timer-drain 5s linear forwards;
-}
-
-@keyframes timer-drain {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
 }
 
 /* Transitions */

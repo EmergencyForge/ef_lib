@@ -199,6 +199,7 @@ exports.ef_lib:OpenMenu({
 | Parameter | Typ | Standard | Beschreibung |
 |-----------|-----|----------|-------------|
 | `title` | string | — | Titel des Menüs |
+| `subtitle` | string | — | Kleine Zeile unter dem Titel (optional, auch bei Untermenüs) |
 | `items` | table | — | Array von Menu Items |
 | `showCursor` | boolean | `Config.ShowCursor` | Maus-Cursor anzeigen. Überschreibt den globalen `Config.ShowCursor` Wert. Auf `false` setzen für Menüs die Kamerasteuerung brauchen (z.B. Kleidung/Wardrobe) |
 | `allowMove` | boolean | `Config.AllowMove` | Spielerbewegung erlauben. Überschreibt den globalen `Config.AllowMove` Wert. Auf `false` setzen um den Spieler einzufrieren. |

@@ -1,6 +1,6 @@
 /* FiveM's CEF is Chromium 103: no :has(), nesting or color-mix(), so tints
-   are precomputed. backdrop-filter never sees the game frame, the glass is
-   tint, rim and sheen only; real blur comes from Lua (Config.ScreenBlur). */
+   are precomputed. backdrop-filter never sees the game frame, real blur comes
+   from Lua (Config.ScreenBlur). */
 
 @font-face { font-family: 'Geist'; src: url('./fonts/geist-400.woff2') format('woff2'); font-weight: 400; }
 @font-face { font-family: 'Geist'; src: url('./fonts/geist-500.woff2') format('woff2'); font-weight: 500; }
@@ -28,22 +28,23 @@
   --info: #60a5fa;
   --info-rgb: 96, 165, 250;
 
-  /* Smoked glass: must stay readable in front of a white ambulance at noon */
-  --glass: linear-gradient(160deg, rgba(38, 38, 42, 0.72) 0%, rgba(14, 14, 16, 0.78) 55%, rgba(10, 10, 12, 0.82) 100%);
-  --glass-sheen: radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.1), transparent 55%);
-  --glass-rim: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
-  --glass-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+  /* Opaque on purpose: must stay readable in front of a white ambulance at noon */
+  --surface: #18181b;
+  --surface-2: #1d1d21;
+  --surface-3: #26262b;
+  --line: #2c2c31;
+  --line-2: #34343a;
+  --panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 
   --fill-1: rgba(255, 255, 255, 0.04);
   --fill-2: rgba(255, 255, 255, 0.07);
   --fill-3: rgba(255, 255, 255, 0.11);
-  --well: rgba(0, 0, 0, 0.28);
-  --well-rim: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --ctl-rim: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --divider: rgba(255, 255, 255, 0.07);
+  --well: #111113;
+  --rim: inset 0 0 0 1px var(--line);
+  --divider: var(--line);
 
-  --radius-panel: 16px;
-  --radius-ctl: 10px;
+  --radius-panel: 8px;
+  --radius-ctl: 6px;
   --radius-pill: 999px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   /* Springs as cubic-bezier: Chromium 103 has no linear() easing */
@@ -76,19 +77,13 @@ button, input, select, textarea {
   height: 100%;
 }
 
-/* Shared glass surface for every floating panel */
-.glass {
+/* Shared surface for every floating panel */
+.panel {
   position: relative;
-  background: var(--glass-sheen), var(--glass);
-  box-shadow: var(--glass-rim), var(--glass-shadow);
+  background: var(--surface);
+  box-shadow: var(--rim), var(--panel-shadow);
   border-radius: var(--radius-panel);
   isolation: isolate;
-}
-
-/* Selected row / active control: accent-tinted glass */
-.glass-active {
-  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.28), rgba(var(--accent-rgb), 0.16));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 0 0 1px rgba(var(--accent-rgb), 0.45);
 }
 
 .kbd {
@@ -98,11 +93,11 @@ button, input, select, textarea {
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
-  border-radius: 6px;
-  background: var(--fill-3);
+  border-radius: 4px;
+  background: var(--surface-3);
   color: var(--text);
   font: 600 11px var(--font);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
 }
 
 /* Animations */

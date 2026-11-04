@@ -155,13 +155,13 @@ onUnmounted(() => {
   gap: 8px;
   border-radius: 50%;
   color: var(--c);
-  background: rgba(10, 10, 12, 0.55);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
   cursor: pointer;
   transition: box-shadow 0.15s ease, background 0.15s ease, transform 0.3s var(--spring);
 }
 
-.sym { font-size: 26px; filter: drop-shadow(0 0 8px currentColor); }
+.sym { font-size: 26px; }
 
 .key {
   font-size: 12px;
@@ -174,14 +174,13 @@ onUnmounted(() => {
   inset: -2px;
   border-radius: 50%;
   border: 3px solid currentColor;
-  box-shadow: 0 0 12px -2px currentColor, inset 0 0 12px -2px currentColor;
   pointer-events: none;
   will-change: transform, opacity;
 }
 
-.field.hit, .field.perfect { box-shadow: inset 0 0 0 3px currentColor, 0 0 28px -4px currentColor; transform: scale(1.06); }
-.field.perfect { background: rgba(255, 255, 255, 0.08); }
-.field.miss { color: var(--danger); box-shadow: inset 0 0 0 3px var(--danger), 0 0 24px -4px var(--danger); animation: nudge 0.26s ease; }
+.field.hit, .field.perfect { box-shadow: inset 0 0 0 3px currentColor; transform: scale(1.06); }
+.field.perfect { background: var(--surface-3); }
+.field.miss { color: var(--danger); box-shadow: inset 0 0 0 3px var(--danger); animation: nudge 0.26s ease; }
 
 @keyframes nudge {
   30% { transform: translateX(-4px); }

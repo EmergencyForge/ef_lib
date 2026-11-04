@@ -279,19 +279,16 @@ onUnmounted(() => {
   height: 8px;
   border-radius: 50%;
   background: var(--accent-color);
-  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.7);
-  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.4s var(--spring);
+  transition: background 0.3s ease, transform 0.4s var(--spring);
 }
 
 .mg-attempts i.off {
   background: rgba(255, 255, 255, 0.18);
-  box-shadow: none;
   transform: scale(0.8);
 }
 
 .mg-attempts.warn i:not(.off) {
   background: var(--danger);
-  box-shadow: 0 0 6px rgba(var(--danger-rgb), 0.7);
 }
 
 /* ── Body ── */
@@ -319,7 +316,6 @@ onUnmounted(() => {
   height: 100%;
   border-radius: inherit;
   background: var(--accent-color);
-  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
   transition: width 0.4s var(--ease);
 }
 
@@ -334,10 +330,10 @@ onUnmounted(() => {
 /* ── Controls hint ── */
 .mg-controls {
   display: flex; align-items: center; gap: 8px;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  background: rgba(10, 10, 12, 0.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  padding: 6px 12px;
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  box-shadow: var(--rim);
 }
 
 .mg-ctrl {
@@ -354,7 +350,7 @@ onUnmounted(() => {
   inset: -24px;
   display: flex; align-items: center; justify-content: center;
   z-index: 10;
-  border-radius: 28px;
+  border-radius: var(--radius-panel);
   /* Blurs the game UI underneath, which is inside the NUI page and therefore works */
   backdrop-filter: blur(12px);
   background: rgba(8, 8, 10, 0.45);
@@ -373,13 +369,13 @@ onUnmounted(() => {
 .mg-result.success .mg-result-icon {
   color: var(--ok);
   background: rgba(var(--ok-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.4), 0 0 40px rgba(var(--ok-rgb), 0.3);
+  box-shadow: inset 0 0 0 1px rgba(var(--ok-rgb), 0.4);
 }
 
 .mg-result.fail .mg-result-icon {
   color: var(--danger);
   background: rgba(var(--danger-rgb), 0.16);
-  box-shadow: inset 0 0 0 1px rgba(var(--danger-rgb), 0.4), 0 0 40px rgba(var(--danger-rgb), 0.3);
+  box-shadow: inset 0 0 0 1px rgba(var(--danger-rgb), 0.4);
 }
 
 .mg-result-text {

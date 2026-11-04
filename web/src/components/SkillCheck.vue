@@ -98,7 +98,7 @@ onUnmounted(() => {
 <template>
   <Transition name="sc">
     <div v-if="visible" class="sc" :class="state">
-      <div class="disc glass">
+      <div class="disc panel">
         <svg viewBox="0 0 132 132" class="ring">
           <circle class="track" cx="66" cy="66" :r="R" />
           <circle
@@ -154,7 +154,7 @@ onUnmounted(() => {
 
 .track {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.09);
+  stroke: var(--line);
   stroke-width: 10;
 }
 
@@ -163,12 +163,10 @@ onUnmounted(() => {
   stroke: var(--accent-color);
   stroke-width: 10;
   /* Butt ends: round caps would draw the arc wider than the part that counts */
-  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.7));
 }
 
 .dot {
   fill: #fff;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
 }
 
 .key {
@@ -178,21 +176,20 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: var(--radius-ctl);
   font-family: var(--font);
   font-size: 20px;
   font-weight: 600;
   color: var(--text);
-  background: var(--fill-2);
-  box-shadow: var(--ctl-rim);
+  background: var(--surface-3);
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.sc.hit .zone { stroke: var(--ok); filter: drop-shadow(0 0 8px rgba(var(--ok-rgb), 0.8)); }
+.sc.hit .zone { stroke: var(--ok); }
 .sc.hit .key { background: var(--ok); color: #0b1a10; }
 .sc.hit .disc { animation: pop 0.22s var(--spring); }
 
-.sc.miss .zone { stroke: var(--danger); filter: drop-shadow(0 0 8px rgba(var(--danger-rgb), 0.8)); }
+.sc.miss .zone { stroke: var(--danger); }
 .sc.miss .key { background: var(--danger); color: #1f0b0b; }
 .sc.miss .disc { animation: shake 0.32s ease; }
 

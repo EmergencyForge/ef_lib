@@ -46,12 +46,14 @@ export const optionValue = (o: SelectOption) => (typeof o === 'string' ? o : o.v
 
 export interface MenuData {
   title?: string
+  subtitle?: string
   items: MenuItem[]
   showCursor?: boolean
 }
 
 interface MenuHistoryEntry {
   title: string
+  subtitle: string
   items: MenuItem[]
   selectedIndex: number
 }
@@ -60,6 +62,7 @@ export const useMenuStore = defineStore('menu', () => {
   const isVisible = ref(false)
   const cursorEnabled = ref(true)
   const title = ref('')
+  const subtitle = ref('')
   const items = ref<MenuItem[]>([])
   const selectedIndex = ref(0)
   const history = ref<MenuHistoryEntry[]>([])
@@ -82,6 +85,7 @@ export const useMenuStore = defineStore('menu', () => {
   function openMenu(data: MenuData) {
     history.value = []
     title.value = data.title || 'Menu'
+    subtitle.value = data.subtitle || ''
     items.value = data.items || []
     selectedIndex.value = 0
     cursorEnabled.value = data.showCursor !== false
@@ -99,11 +103,13 @@ export const useMenuStore = defineStore('menu', () => {
     // Save current state to history
     history.value.push({
       title: title.value,
+      subtitle: subtitle.value,
       items: [...items.value],
       selectedIndex: selectedIndex.value
     })
     // Open submenu
     title.value = submenu.title || 'Menu'
+    subtitle.value = submenu.subtitle || ''
     items.value = submenu.items || []
     selectedIndex.value = 0
   }
@@ -113,6 +119,7 @@ export const useMenuStore = defineStore('menu', () => {
 
     const previous = history.value.pop()!
     title.value = previous.title
+    subtitle.value = previous.subtitle
     items.value = previous.items
     selectedIndex.value = previous.selectedIndex
     return true
@@ -284,6 +291,7 @@ export const useMenuStore = defineStore('menu', () => {
     isVisible,
     cursorEnabled,
     title,
+    subtitle,
     items,
     selectedIndex,
     history,

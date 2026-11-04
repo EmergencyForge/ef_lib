@@ -101,7 +101,7 @@ function pick(value: string) {
 <style scoped>
 .dp-field {
   width: 100%;
-  height: 40px;
+  height: 34px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -109,10 +109,10 @@ function pick(value: string) {
   border: none;
   border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   text-align: left;
   cursor: pointer;
@@ -120,7 +120,7 @@ function pick(value: string) {
 }
 
 .dp-field.open {
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--accent-color), 0 0 0 3px rgba(var(--accent-rgb), 0.2);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .dp-icon,
@@ -141,10 +141,10 @@ function pick(value: string) {
 
 .dp-cal {
   margin-top: 8px;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--fill-1);
-  box-shadow: var(--ctl-rim);
+  padding: 10px;
+  border-radius: var(--radius-ctl);
+  background: var(--surface-2);
+  box-shadow: var(--rim);
   transform-origin: top left;
 }
 
@@ -164,10 +164,10 @@ function pick(value: string) {
 }
 
 .dp-nav {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   background: none;
   color: var(--text-3);
   font-size: 11px;
@@ -194,9 +194,9 @@ function pick(value: string) {
 }
 
 .dp-day {
-  height: 32px;
+  height: 28px;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   background: none;
   color: var(--text-2);
   font: inherit;
@@ -224,7 +224,6 @@ function pick(value: string) {
   background: var(--accent-color);
   color: var(--on-accent);
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.5);
 }
 
 .dp-enter-active {

@@ -96,21 +96,15 @@ function draw() {
   // Outer ring, lights up the closer the dial is
   ctx.beginPath()
   ctx.arc(CX, CY, outerR, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(16, 16, 18, 0.75)'
+  ctx.fillStyle = '#18181b'
   ctx.fill()
   ctx.lineWidth = 3
-  ctx.strokeStyle = glow > 0 ? `rgba(${accent}, ${0.15 + glow * 0.75})` : 'rgba(255,255,255,0.14)'
-  ctx.shadowColor = `rgba(${accent}, ${glow})`
-  ctx.shadowBlur = glow * 30
+  ctx.strokeStyle = glow > 0 ? `rgba(${accent}, ${0.15 + glow * 0.75})` : '#2c2c31'
   ctx.stroke()
-  ctx.shadowBlur = 0
 
-  const face = ctx.createRadialGradient(CX - 120, CY - 140, 20, CX, CY, outerR)
-  face.addColorStop(0, 'rgba(58, 58, 64, 0.85)')
-  face.addColorStop(1, 'rgba(20, 20, 23, 0.9)')
   ctx.beginPath()
   ctx.arc(CX, CY, innerR + 45, 0, Math.PI * 2)
-  ctx.fillStyle = face
+  ctx.fillStyle = '#1d1d21'
   ctx.fill()
 
   for (let i = 0; i < n; i++) {
@@ -133,7 +127,7 @@ function draw() {
 
   ctx.beginPath()
   ctx.arc(CX, CY, innerR - 18, 0, Math.PI * 2)
-  ctx.fillStyle = 'rgba(10, 10, 12, 0.88)'
+  ctx.fillStyle = '#111113'
   ctx.fill()
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'
   ctx.lineWidth = 1
@@ -227,8 +221,8 @@ onUnmounted(() => {
 .dir {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   min-width: 180px;
-  padding: 6px 16px;
-  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  border-radius: var(--radius-ctl);
   font-size: 13px; font-weight: 500;
   transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
@@ -237,7 +231,7 @@ onUnmounted(() => {
 
 .wrap { position: relative; width: 300px; height: 300px; }
 
-canvas { width: 300px; height: 300px; filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.45)); }
+canvas { width: 300px; height: 300px; }
 
 .marker {
   position: absolute; top: -3px; left: 50%;
@@ -245,7 +239,6 @@ canvas { width: 300px; height: 300px; filter: drop-shadow(0 8px 24px rgba(0, 0, 
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 14px solid var(--accent-color);
-  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.5));
   z-index: 5;
   transition: transform 0.2s var(--spring);
 }
@@ -265,7 +258,7 @@ canvas { width: 300px; height: 300px; filter: drop-shadow(0 8px 24px rgba(0, 0, 
   display: flex; align-items: center; justify-content: center;
   border-radius: var(--radius-ctl);
   background: var(--well);
-  box-shadow: var(--well-rim);
+  box-shadow: var(--rim);
   color: var(--text-3);
   font-size: 16px; font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -274,8 +267,8 @@ canvas { width: 300px; height: 300px; filter: drop-shadow(0 8px 24px rgba(0, 0, 
 
 .slot.active {
   color: var(--text);
-  background: rgba(var(--accent-rgb), 0.2);
-  box-shadow: inset 0 0 0 1px var(--accent-color), 0 0 12px rgba(var(--accent-rgb), 0.25);
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--accent-color);
 }
 
 .slot.solved {

@@ -232,7 +232,7 @@ onUnmounted(() => {
   <Transition name="radial" :duration="{ enter: 600, leave: 160 }">
     <div v-if="store.visible" class="radial-overlay">
       <div class="radial-wheel" ref="wheelRef">
-        <div class="radial-disc glass"></div>
+        <div class="radial-disc panel"></div>
         <svg class="radial-svg" :viewBox="`0 0 ${VIEW} ${VIEW}`" preserveAspectRatio="xMidYMid meet">
           <path
             v-for="slice in slices"
@@ -301,8 +301,8 @@ onUnmounted(() => {
   position: absolute;
   inset: 35%;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.28);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: var(--surface-2);
+  box-shadow: var(--rim);
 }
 
 .radial-svg {
@@ -314,14 +314,14 @@ onUnmounted(() => {
 
 .slice {
   fill: transparent;
-  stroke: rgba(255, 255, 255, 0.06);
+  stroke: var(--line);
   stroke-width: 1;
   transition: fill 0.12s ease, stroke 0.12s ease;
 }
 
 .slice.active {
-  fill: rgba(var(--accent-rgb), 0.32);
-  stroke: rgba(var(--accent-rgb), 0.55);
+  fill: var(--line-2);
+  stroke: var(--line-2);
 }
 
 .radial-labels {
@@ -359,7 +359,7 @@ onUnmounted(() => {
 }
 
 .label.active i {
-  color: #ffffff;
+  color: var(--accent-color);
 }
 
 .submenu-indicator {

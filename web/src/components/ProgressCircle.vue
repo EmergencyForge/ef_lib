@@ -20,7 +20,7 @@ function cancel() {
 
 <template>
   <Transition name="pc">
-    <div v-if="store.visible && store.style === 'circle'" class="pc glass">
+    <div v-if="store.visible && store.style === 'circle'" class="pc panel">
       <div class="pc-dial">
         <b v-for="i in TICKS" :key="i" :class="{ on: i <= lit }" :style="{ transform: `rotate(${(i - 1) * 10}deg)` }"></b>
         <i :class="resolveIconClass(store.icon || 'fa-hourglass-half')"></i>
@@ -44,10 +44,9 @@ function cancel() {
   z-index: 900;
   display: flex;
   align-items: center;
-  gap: 16px;
-  max-width: 460px;
-  padding: 10px 24px 10px 10px;
-  border-radius: 48px;
+  gap: 14px;
+  max-width: 420px;
+  padding: 10px 18px 10px 10px;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -71,14 +70,13 @@ function cancel() {
   height: 10px;
   margin-left: -1.5px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--line-2);
   transform-origin: 1.5px 38px;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease;
 }
 
 .pc-dial b.on {
   background: var(--accent-color);
-  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.9);
 }
 
 .pc-text {
@@ -89,7 +87,7 @@ function cancel() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
@@ -99,7 +97,7 @@ function cancel() {
   align-items: center;
   gap: 10px;
   margin-top: 3px;
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--text-3);
   white-space: nowrap;
 }

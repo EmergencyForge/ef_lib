@@ -34,7 +34,7 @@ useNuiEvent('closeRequest', (data: { result: 'accept' | 'decline' | 'timeout' })
 
 <template>
   <Transition name="rq">
-    <div v-if="request" :key="session" class="rq glass" :class="answer">
+    <div v-if="request" :key="session" class="rq panel" :class="answer">
       <div class="rq-body">
         <i class="rq-icon" :class="resolveIconClass(request.icon || 'fa-circle-question')"></i>
         <div class="rq-text">
@@ -59,66 +59,41 @@ useNuiEvent('closeRequest', (data: { result: 'accept' | 'decline' | 'timeout' })
   top: 9vh;
   left: 50%;
   z-index: 9998;
-  width: 400px;
-  margin-left: -200px;
+  width: 360px;
+  margin-left: -180px;
   overflow: hidden;
   pointer-events: none;
-  transition: box-shadow 0.25s ease;
 }
 
-/* Same leading light as the notifications, in the accent colour, so it reads as something to answer */
-.rq::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: radial-gradient(80% 140% at 0% 50%, rgba(var(--c-rgb, var(--accent-rgb)), 0.28), transparent 70%);
-  transition: background 0.25s ease;
-}
-
-.rq::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 16px;
-  bottom: 16px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--c, var(--accent-color));
-  box-shadow: 0 0 12px var(--c, var(--accent-color));
-}
-
-.rq.accept { --c: var(--ok); --c-rgb: var(--ok-rgb); }
-.rq.decline { --c: var(--danger); --c-rgb: var(--danger-rgb); }
+.rq.accept { --c: var(--ok); }
+.rq.decline { --c: var(--danger); }
 
 .rq-body {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 16px 18px 0 22px;
+  gap: 10px;
+  padding: 12px 14px 0;
 }
 
 .rq-icon {
   flex-shrink: 0;
   margin-top: 1px;
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1;
   color: var(--c, var(--accent-color));
-  filter: drop-shadow(0 0 8px rgba(var(--c-rgb, var(--accent-rgb)), 0.6));
 }
 
 .rq-text { flex: 1; min-width: 0; }
 
 .rq-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text);
 }
 
 .rq-message {
-  margin-top: 3px;
-  font-size: 13px;
+  font-size: 11.5px;
   line-height: 1.45;
   color: var(--text-2);
 }
@@ -126,20 +101,20 @@ useNuiEvent('closeRequest', (data: { result: 'accept' | 'decline' | 'timeout' })
 .rq-actions {
   display: flex;
   gap: 8px;
-  padding: 12px 18px 20px 54px;
+  padding: 10px 14px 16px 39px;
 }
 
 .rq-choice {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 4px 12px 4px 4px;
-  border-radius: var(--radius-pill);
-  font-size: 13px;
+  padding: 3px 10px 3px 3px;
+  border-radius: var(--radius-ctl);
+  font-size: 12.5px;
   font-weight: 500;
   color: var(--text-2);
-  background: var(--fill-1);
-  box-shadow: var(--ctl-rim);
+  background: var(--surface-2);
+  box-shadow: var(--rim);
   transition: background 0.2s ease, color 0.2s ease, transform 0.3s var(--spring);
 }
 
@@ -152,9 +127,9 @@ useNuiEvent('closeRequest', (data: { result: 'accept' | 'decline' | 'timeout' })
 
 .rq-timer {
   position: absolute;
-  left: 22px;
-  right: 18px;
-  bottom: 9px;
+  left: 14px;
+  right: 14px;
+  bottom: 7px;
   height: 2px;
   border-radius: 2px;
   background: var(--fill-2);

@@ -159,7 +159,7 @@ svg { position: absolute; inset: 0; overflow: visible; }
   stroke-linecap: round;
 }
 
-.wire.done { filter: drop-shadow(0 0 6px currentColor); animation: snap 0.35s var(--ease); }
+.wire.done { animation: snap 0.35s var(--ease); }
 .wire.live { opacity: 0.85; stroke-dasharray: 2 12; stroke-width: 6; }
 
 @keyframes snap { from { stroke-width: 11; } }
@@ -175,18 +175,17 @@ svg { position: absolute; inset: 0; overflow: visible; }
   color: #111113;
   font-size: 15px;
   background: var(--c);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.2), 0 0 14px -2px var(--c);
   transition: transform 0.3s var(--spring), box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .plug.left { cursor: grab; }
 .plug.left:hover:not(.done) { transform: scale(1.12); }
-.plug.done { transform: scale(0.9); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 18px var(--c); }
+.plug.done { transform: scale(0.9); }
 
 .plug.plain {
   color: var(--text);
-  background: rgba(10, 10, 12, 0.6);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line-2);
 }
 
 .spark {
