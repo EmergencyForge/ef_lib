@@ -11,9 +11,13 @@
   --font: 'Geist', 'Segoe UI', system-ui, sans-serif;
 
   --text: #f2f0ed;
-  --text-2: rgba(242, 240, 237, 0.72);
-  --text-3: rgba(242, 240, 237, 0.5);
+  --text-2: rgba(242, 240, 237, 0.8);
+  --text-3: rgba(242, 240, 237, 0.62);
   --on-accent: #111113;
+
+  /* What is selected. Orange stays for actions and signals. */
+  --sel: #f2f0ed;
+  --on-sel: #111113;
 
   --ok: #4ade80;
   --ok-rgb: 74, 222, 128;
@@ -24,23 +28,26 @@
   --info: #60a5fa;
   --info-rgb: 96, 165, 250;
 
-  /* Opaque on purpose: must stay readable in front of a white ambulance at noon */
-  --surface: #18181b;
-  --surface-2: #1d1d21;
-  --surface-3: #26262b;
-  --line: #2c2c31;
-  --line-2: #34343a;
-  --panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  /* 82 % is the floor: below it --text-3 drops under contrast 4.5 in front of a white
+     ambulance at noon. No backdrop-filter, the NUI layer cannot see the game behind it. */
+  --surface: rgba(17, 17, 19, 0.82);
+  --surface-2: rgba(255, 255, 255, 0.035);
+  --surface-3: rgba(255, 255, 255, 0.1);
+  /* For what lies over other text or has to hide what is behind it */
+  --surface-solid: #17171a;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.16);
+  --panel-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 
   --fill-1: rgba(255, 255, 255, 0.04);
   --fill-2: rgba(255, 255, 255, 0.07);
   --fill-3: rgba(255, 255, 255, 0.11);
-  --well: #111113;
+  --well: rgba(0, 0, 0, 0.26);
   --rim: inset 0 0 0 1px var(--line);
   --divider: var(--line);
 
-  --radius-panel: 8px;
-  --radius-ctl: 6px;
+  --radius-panel: 14px;
+  --radius-ctl: 8px;
   --radius-pill: 999px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   /* Springs as cubic-bezier: Chromium 103 has no linear() easing */
@@ -48,7 +55,6 @@
   --exit: cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* Outer ring: the head and foot zones of a panel would paint over an inset one */
 .panel,
 .ef-panel {
   position: relative;
@@ -64,6 +70,27 @@
   overflow: hidden;
 }
 
+/* A long list or a form gets noisy over a busy scene where a small panel does not */
+.ef-dense {
+  --surface: rgba(17, 17, 19, 0.93);
+}
+
+/* A selected row. The tokens flip so that a control inside it stays readable. */
+.ef-sel,
+.ef-item[aria-expanded='true'] {
+  --text: #111113;
+  --text-2: rgba(17, 17, 19, 0.76);
+  --text-3: rgba(17, 17, 19, 0.62);
+  --sel: #111113;
+  --on-sel: #f2f0ed;
+  --fill-3: rgba(0, 0, 0, 0.14);
+  --surface-3: rgba(0, 0, 0, 0.1);
+  --well: rgba(0, 0, 0, 0.06);
+  --line: rgba(0, 0, 0, 0.12);
+  background: #f2f0ed;
+  color: var(--text);
+}
+
 .ef-head {
   display: flex;
   flex: none;
@@ -71,7 +98,6 @@
   gap: 10px;
   min-height: 58px;
   padding: 10px 10px 10px 14px;
-  background: var(--surface-2);
   border-bottom: 1px solid var(--line);
 }
 
@@ -108,7 +134,6 @@
   align-items: center;
   gap: 14px;
   padding: 9px 14px;
-  background: var(--surface-2);
   border-top: 1px solid var(--line);
   color: var(--text-3);
   font-size: 11.5px;
@@ -156,11 +181,10 @@
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
-  border-radius: 4px;
+  border-radius: 5px;
   background: var(--surface-3);
   color: var(--text);
   font: 600 11px var(--font);
-  box-shadow: inset 0 0 0 1px var(--line-2);
 }
 
 .ef-tools {
@@ -225,20 +249,17 @@
 .ef-seg {
   display: flex;
   flex-wrap: wrap;
-  padding: 3px;
-  border-radius: var(--radius-ctl);
-  background: var(--well);
-  box-shadow: var(--rim);
+  gap: 2px;
 }
 
 .ef-seg button {
   flex: 1 1 auto;
-  height: 24px;
+  height: 26px;
   padding: 0 9px;
   border: 0;
-  border-radius: 4px;
+  border-radius: 7px;
   background: none;
-  color: var(--text-3);
+  color: var(--text-2);
   font: inherit;
   font-size: 11.5px;
   white-space: nowrap;
@@ -250,9 +271,12 @@
 }
 
 .ef-seg [aria-selected='true'],
-.ef-seg [aria-pressed='true'] {
-  background: var(--surface-3);
-  color: var(--text);
+.ef-seg [aria-selected='true']:hover:not(:disabled),
+.ef-seg [aria-pressed='true'],
+.ef-seg [aria-pressed='true']:hover:not(:disabled) {
+  background: var(--sel);
+  color: var(--on-sel);
+  font-weight: 600;
 }
 
 .ef-seg button:disabled {
@@ -315,8 +339,8 @@
   background: var(--fill-1);
 }
 
-.ef-item[aria-expanded='true'] {
-  background: var(--surface-3);
+.ef-item[aria-expanded='true']:hover {
+  background: #f2f0ed;
 }
 
 .ef-item.off {

@@ -221,8 +221,8 @@ function pick(value: string) {
 }
 
 .dp-day.on {
-  background: var(--accent-color);
-  color: var(--on-accent);
+  background: var(--sel);
+  color: var(--on-sel);
   font-weight: 600;
 }
 

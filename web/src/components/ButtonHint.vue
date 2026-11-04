@@ -121,7 +121,7 @@ const isHorizontal = computed(() =>
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
-  border-radius: 4px;
+  border-radius: 5px;
   font-size: 11px;
   font-weight: 600;
   line-height: 1;
@@ -129,7 +129,6 @@ const isHorizontal = computed(() =>
 
 .hint-key {
   background: var(--surface-3);
-  box-shadow: inset 0 0 0 1px var(--line-2);
   color: var(--text);
   text-transform: uppercase;
 }

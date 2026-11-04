@@ -372,7 +372,7 @@ onUnmounted(() => {
 <template>
   <Transition name="menu" :duration="{ enter: 600, leave: 200 }">
     <div v-if="menuStore.isVisible" class="menu-container" :class="`position-${settingsStore.menuPosition}`">
-      <div class="menu panel">
+      <div class="menu panel ef-dense">
         <div class="menu-header">
           <h2 class="menu-title">{{ menuStore.title }}</h2>
           <p v-if="menuStore.subtitle" class="menu-subtitle">{{ menuStore.subtitle }}</p>
@@ -384,7 +384,7 @@ onUnmounted(() => {
             :key="item.id"
             class="menu-item"
             :class="{
-              selected: index === menuStore.selectedIndex,
+              'selected ef-sel': index === menuStore.selectedIndex,
               disabled: item.disabled,
               readonly: item.readonly
             }"
@@ -506,7 +506,6 @@ onUnmounted(() => {
 
 .menu-header {
   padding: 12px 14px;
-  background: var(--surface-2);
   border-bottom: 1px solid var(--divider);
 }
 
@@ -546,10 +545,6 @@ onUnmounted(() => {
   border-radius: var(--radius-ctl);
   transition: background 0.15s ease;
   cursor: pointer;
-}
-
-.menu-item.selected {
-  background: var(--surface-3);
 }
 
 .menu-item.disabled {
@@ -645,23 +640,21 @@ onUnmounted(() => {
 .item-select {
   display: flex;
   flex-shrink: 0;
-  padding: 3px;
-  border-radius: var(--radius-ctl);
-  background: var(--well);
-  box-shadow: var(--rim);
+  gap: 2px;
 }
 
 .select-option {
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 11.5px;
-  color: var(--text-3);
+  color: var(--text-2);
   transition: background 0.15s ease, color 0.15s ease;
 }
 
 .select-option.active {
-  background: var(--surface-3);
-  color: var(--text);
+  background: var(--sel);
+  color: var(--on-sel);
+  font-weight: 600;
 }
 
 /* Number selector */
@@ -740,7 +733,6 @@ onUnmounted(() => {
 
 .menu-footer {
   padding: 9px 14px;
-  background: var(--surface-2);
   border-top: 1px solid var(--divider);
 }
 

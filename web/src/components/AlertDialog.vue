@@ -55,7 +55,7 @@ onUnmounted(() => {
 <template>
   <Transition name="alert" :duration="{ enter: 550, leave: 180 }">
     <div v-if="dialogStore.alertDialogVisible" class="alert-overlay" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
-      <div class="alert-modal panel" :class="{ centered: dialogStore.alertDialogData.centered }">
+      <div class="alert-modal panel ef-dense" :class="{ centered: dialogStore.alertDialogData.centered }">
         <!-- Icon -->
         <div class="alert-icon">
           <i class="fa-solid fa-circle-exclamation"></i>

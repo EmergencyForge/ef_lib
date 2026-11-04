@@ -122,7 +122,7 @@ onUnmounted(() => {
 <template>
   <Transition name="dialog" :duration="{ enter: 550, leave: 180 }">
     <div v-if="dialogStore.inputDialogVisible" class="dialog-overlay" ref="containerRef" @mousedown="onOverlayMouseDown" @click="onOverlayClick">
-      <div class="dialog-modal panel">
+      <div class="dialog-modal panel ef-dense">
         <!-- Header -->
         <div class="dialog-header">
           <h2 class="dialog-title">{{ dialogStore.inputDialogTitle }}</h2>
@@ -308,7 +308,6 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 10px 10px 14px;
-  background: var(--surface-2);
   border-bottom: 1px solid var(--divider);
 }
 
@@ -487,7 +486,7 @@ onUnmounted(() => {
 }
 
 .field-select option {
-  background: var(--surface);
+  background: var(--surface-solid);
   color: #ffffff;
 }
 
@@ -620,14 +619,10 @@ onUnmounted(() => {
   transition: opacity 0.15s ease, transform 0.3s var(--spring);
 }
 
-.tile.on {
-  background: var(--surface-3);
-  box-shadow: inset 0 0 0 1px var(--accent-color);
-  color: var(--text);
-}
-
-.tile.on .tile-icon {
-  color: var(--accent-color);
+.tile.on,
+.tile.on:hover {
+  background: var(--sel);
+  color: var(--on-sel);
 }
 
 .tile.on .tile-check {
@@ -641,7 +636,6 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   padding: 10px 14px;
-  background: var(--surface-2);
   border-top: 1px solid var(--divider);
 }
 
