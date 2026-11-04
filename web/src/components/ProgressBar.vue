@@ -5,6 +5,9 @@ import { onMounted, onUnmounted, computed } from 'vue'
 import { useProgressStore } from '@/stores/progress'
 import { fetchNui } from '@/composables/useNui'
 
+// 59 segments of 4 + 2 px fill the 352 px inside the card exactly
+const SEGMENTS = 59
+
 const store = useProgressStore()
 
 function handleCancel() {
@@ -30,6 +33,8 @@ const cancelLabel = computed(() => {
   return key
 })
 
+const fillWidth = computed(() => Math.max(0, Math.floor(store.progress * SEGMENTS) * 6 - 2))
+
 const remainingSeconds = computed(() => {
   const ms = Math.max(0, (1 - store.progress) * store.duration)
   return (ms / 1000).toFixed(1)
@@ -53,9 +58,7 @@ onUnmounted(() => {
           <span class="progress-label">{{ store.label }}</span>
           <span class="progress-time">{{ remainingSeconds }} s</span>
         </div>
-        <div class="progress-track">
-          <div class="progress-fill" :style="{ clipPath: `inset(0 ${100 - store.progress * 100}% 0 0 round 3px)` }"></div>
-        </div>
+        <div class="ef-track"><i :style="{ width: `${fillWidth}px` }"></i></div>
       </div>
 
       <div v-if="store.canCancel" class="progress-cancel">
@@ -86,20 +89,6 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.progress-track {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--line);
-}
-
-/* Full-width fill revealed by clip-path, so the rounded ends never squash */
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--accent-color);
-  transition: clip-path 0.08s linear;
 }
 
 .progress-content {

@@ -7,51 +7,6 @@
 @font-face { font-family: 'Geist'; src: url('./fonts/geist-600.woff2') format('woff2'); font-weight: 600; }
 @font-face { font-family: 'Geist'; src: url('./fonts/geist-700.woff2') format('woff2'); font-weight: 700; }
 
-:root {
-  /* Overwritten at runtime by the config store */
-  --accent-color: #f0500a;
-  --accent-rgb: 240, 80, 10;
-
-  --font: 'Geist', 'Segoe UI', system-ui, sans-serif;
-
-  --text: #f2f0ed;
-  --text-2: rgba(242, 240, 237, 0.72);
-  --text-3: rgba(242, 240, 237, 0.5);
-  --on-accent: #111113;
-
-  --ok: #4ade80;
-  --ok-rgb: 74, 222, 128;
-  --warn: #fbbf24;
-  --warn-rgb: 251, 191, 36;
-  --danger: #f87171;
-  --danger-rgb: 248, 113, 113;
-  --info: #60a5fa;
-  --info-rgb: 96, 165, 250;
-
-  /* Opaque on purpose: must stay readable in front of a white ambulance at noon */
-  --surface: #18181b;
-  --surface-2: #1d1d21;
-  --surface-3: #26262b;
-  --line: #2c2c31;
-  --line-2: #34343a;
-  --panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-
-  --fill-1: rgba(255, 255, 255, 0.04);
-  --fill-2: rgba(255, 255, 255, 0.07);
-  --fill-3: rgba(255, 255, 255, 0.11);
-  --well: #111113;
-  --rim: inset 0 0 0 1px var(--line);
-  --divider: var(--line);
-
-  --radius-panel: 8px;
-  --radius-ctl: 6px;
-  --radius-pill: 999px;
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  /* Springs as cubic-bezier: Chromium 103 has no linear() easing */
-  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --exit: cubic-bezier(0.4, 0, 1, 1);
-}
-
 * {
   margin: 0;
   padding: 0;
