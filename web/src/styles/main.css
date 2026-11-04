@@ -32,29 +32,6 @@ button, input, select, textarea {
   height: 100%;
 }
 
-/* Shared surface for every floating panel */
-.panel {
-  position: relative;
-  background: var(--surface);
-  box-shadow: var(--rim), var(--panel-shadow);
-  border-radius: var(--radius-panel);
-  isolation: isolate;
-}
-
-.kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 5px;
-  border-radius: 4px;
-  background: var(--surface-3);
-  color: var(--text);
-  font: 600 11px var(--font);
-  box-shadow: inset 0 0 0 1px var(--line-2);
-}
-
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; }
