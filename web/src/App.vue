@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import Menu from '@/components/Menu.vue'
 import Notifications from '@/components/Notifications.vue'
 import ButtonHint from '@/components/ButtonHint.vue'
@@ -79,6 +79,11 @@ useNuiEvent('setConfig', (data: { accentColor?: string; locale?: string }) => {
     settingsStore.setAccentColor(data.accentColor)
   }
 })
+
+// Other resources draw in the player's colour too, so Lua has to learn about changes
+watch(() => settingsStore.accentColor, (color) => {
+  fetchNui('accentColor', { color })
+}, { immediate: true })
 
 // ─── Hint Events ───
 

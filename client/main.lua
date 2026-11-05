@@ -662,6 +662,18 @@ RegisterNUICallback('keyPress', function(data, cb)
     cb('ok')
 end)
 
+-- The player's own choice lives in the browser storage, so only the NUI knows the colour in use
+local accentColor = Config.AccentColor
+
+RegisterNUICallback('accentColor', function(data, cb)
+    local color = data and data.color
+    if type(color) == 'string' and color:match('^#%x%x%x%x%x%x$') and color ~= accentColor then
+        accentColor = color
+        TriggerEvent('ef_lib:accentChanged', color)
+    end
+    cb('ok')
+end)
+
 RegisterNUICallback('nuiReady', function(data, cb)
     print('[EF_LIB] NUI is ready')
     SetConfig({ accentColor = Config.AccentColor, locale = Config.Locale })
@@ -1496,6 +1508,7 @@ exports('SendNotification', SendNotification)
 -- UI Config
 exports('SetConfig', SetConfig)
 exports('SetAccentColor', SetAccentColor)
+exports('GetAccentColor', function() return accentColor end)
 
 -- Button Hints
 exports('ShowHint', ShowHint)

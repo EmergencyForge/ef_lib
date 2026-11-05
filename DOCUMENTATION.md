@@ -488,6 +488,16 @@ exports.ef_lib:HideAllHints()
 exports.ef_lib:SetAccentColor('#ff0000')
 ```
 
+Die Farbe, die der Spieler tatsächlich nutzt (seine eigene Wahl oder `Config.AccentColor`), liefert `GetAccentColor`. Ändert sie sich, feuert das lokale Event `ef_lib:accentChanged`:
+
+```lua
+local hex = exports.ef_lib:GetAccentColor() -- '#f0500a'
+
+AddEventHandler('ef_lib:accentChanged', function(hex)
+    print('Neue Akzentfarbe:', hex)
+end)
+```
+
 ---
 
 ## Client-Einstellungen (UI Settings)
@@ -567,6 +577,7 @@ exports.ef_lib:SendNotification(type, title, message, duration)
 -- UI Config
 exports.ef_lib:SetConfig(config)
 exports.ef_lib:SetAccentColor(hexColor)
+exports.ef_lib:GetAccentColor()                     -- → '#rrggbb', Event ef_lib:accentChanged(hex)
 
 -- Button Hints
 exports.ef_lib:ShowHint(key, label, id, icon, position)
