@@ -3,7 +3,8 @@ game 'gta5'
 
 author 'EmergencyForge'
 description 'EF Library - Core UI Framework'
-version '1.0.0'
+-- Raise before tagging: the escrow upload and CheckVersion read it from here
+version '2026.1.0'
 
 lua54 'yes'
 
