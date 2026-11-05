@@ -155,6 +155,23 @@ local zoneIdCounter = 0
 local zoneThreadActive = false
 local ZONE_CHECK_INTERVAL = 300 -- ms between zone checks (same as ox_lib)
 
+-- A stopped resource can't remove its zones, and their callbacks are dead references by then
+AddEventHandler('onResourceStop', function(resource)
+    for id, zone in pairs(registeredZones) do
+        if zone.ownerResource == resource then
+            registeredZones[id] = nil
+        end
+    end
+end)
+
+-- All zones share one thread: an error here would end the polling for every resource
+local function callZone(zone, callback)
+    local ok, err = pcall(callback, zone)
+    if not ok then
+        print(('^1[EF_LIB] Zone callback of "%s" failed: %s^0'):format(zone.ownerResource, tostring(err)))
+    end
+end
+
 --- Create a sphere zone with enter/exit callbacks
 --- @param data table { coords = vector3, radius = number, onEnter? = function(self), onExit? = function(self), inside? = function(self), ... }
 --- @return table Zone object with :remove() method
@@ -169,6 +186,7 @@ local function CreateSphereZone(data)
 
     local zone = {
         id = zoneId,
+        ownerResource = GetInvokingResource() or GetCurrentResourceName(),
         coords = type(data.coords) == 'vector3' and data.coords or vector3(data.coords.x or data.coords[1], data.coords.y or data.coords[2], data.coords.z or data.coords[3]),
         radius = tonumber(data.radius) or 2.0,
         onEnter = data.onEnter,
@@ -214,18 +232,18 @@ local function CreateSphereZone(data)
                         if not z.isInside then
                             z.isInside = true
                             if z.onEnter then
-                                z:onEnter()
+                                callZone(z, z.onEnter)
                             end
                         end
                         if z.inside then
-                            z:inside()
+                            callZone(z, z.inside)
                         end
                     else
                         -- Player is outside
                         if z.isInside then
                             z.isInside = false
                             if z.onExit then
-                                z:onExit()
+                                callZone(z, z.onExit)
                             end
                         end
                     end

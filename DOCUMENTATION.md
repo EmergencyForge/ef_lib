@@ -1105,6 +1105,8 @@ exports.ef_lib:ContextMenu({ id = 'menu', title = 'Titel', options = { ... } })
 
 Einfaches Zone-System mit Enter/Exit/Inside-Callbacks. Prüft alle 300ms die Spielerposition.
 
+**Hinweis:** Zonen werden automatisch entfernt, wenn die erstellende Resource stoppt. Sie lässt sich also neu starten, ohne ef_lib mit neu zu starten.
+
 ### Sphere Zone erstellen
 
 ```lua
