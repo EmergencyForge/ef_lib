@@ -1,0 +1,77 @@
+name: Cfx Portal Release
+
+on:
+  release:
+    # Not prereleased: it stays silent for pre-releases published from a draft.
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+
+    steps:
+      # A shell check, because `prerelease && beta || stable` in an expression
+      # would send a pre-release to the live asset when there is no beta asset.
+      - name: Pick asset
+        id: asset
+        env:
+          PRERELEASE: ${{ github.event.release.prerelease }}
+          STABLE_ID: ${{ secrets.CFX_ASSET_ID }}
+          BETA_ID: ${{ secrets.CFX_BETA_ASSET_ID }}
+        run: |
+          if [ "$PRERELEASE" = "true" ]; then
+            if [ -z "$BETA_ID" ]; then
+              echo "::notice::No beta asset, skipping the portal upload."
+              exit 0
+            fi
+            ID="$BETA_ID"
+          else
+            ID="$STABLE_ID"
+          fi
+
+          [ -n "$ID" ] || {
+            echo "::error::Secret CFX_ASSET_ID is missing."
+            exit 1
+          }
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+      # Build the tagged commit, not the default branch: a draft published later
+      # would otherwise ship newer code under the old version.
+      - name: Checkout code
+        if: steps.asset.outputs.id != ''
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Build ZIP
+        if: steps.asset.outputs.id != ''
+        run: |
+          VERSION="${TAG#v}"
+          mkdir build
+          mkdir -p build/ef_lib/web
+          cp -r client server shared config.lua example.lua fxmanifest.lua README.md DOCUMENTATION.md LICENSE build/ef_lib/
+          cp -r web/dist build/ef_lib/web/dist
+
+          # The action reads the portal version from the packed manifest.
+          sed -i "s/^version .*/version '$VERSION'/" build/ef_lib/fxmanifest.lua
+          grep -Fx "version '$VERSION'" build/ef_lib/fxmanifest.lua
+
+          (cd build && zip -q -r ../ef_lib.zip ef_lib)
+
+      # The asset is chosen above, so the portal's release candidate flag stays
+      # off instead of following a beta line in the manifest.
+      - name: Upload to Cfx Portal
+        if: steps.asset.outputs.id != ''
+        uses: EmergencyForge/cfx-portal-upload@8770cb16929765d6e159f4fd7a64febd067b3d0f # v1.2.6-ef.1
+        with:
+          cookie: ${{ secrets.CFX_FORUM_COOKIE }}
+          assetId: ${{ steps.asset.outputs.id }}
+          makeZip: false
+          zipPath: ${{ github.workspace }}/ef_lib.zip
+          beta: false
+          changelog: ${{ github.event.release.body }}
