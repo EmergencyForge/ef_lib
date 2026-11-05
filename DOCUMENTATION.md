@@ -147,6 +147,8 @@ end
 
 **Wichtig:** `CallbackAwait` blockiert den aktuellen Thread bis die Antwort kommt (max. 30 Sekunden Timeout). Verwende es in `CreateThread` oder Event-Handlern.
 
+**Hinweis:** Exports verlieren alles hinter einem `nil`. Ein `nil` vor einem weiteren Rückgabewert kommt deshalb als `false` an: Aus `return nil, 'Fehler'` wird `false, 'Fehler'`. Prüfe Fehler mit `if not success`, nicht mit `== nil`.
+
 ### Client: Callback aufrufen (asynchron / non-blocking)
 
 ```lua

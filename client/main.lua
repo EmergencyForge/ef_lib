@@ -97,6 +97,15 @@ local function CallbackAwait(name, ...)
 
     -- Block this thread until we get a response
     local result = Citizen.Await(p)
+
+    -- This runs behind an export, and an export's results stop at the first nil:
+    -- nil, message would reach the caller as nothing at all
+    for i = result.n - 1, 1, -1 do
+        if result[i] == nil and result[i + 1] ~= nil then
+            result[i] = false
+        end
+    end
+
     return table.unpack(result, 1, result.n)
 end
 

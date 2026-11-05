@@ -37,6 +37,7 @@ escrow_ignore {
     'client/**',
     'server/**',
     'shared/**',
+    'tests/**',
     'docs/**',
     'web/**',
 }
